@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Tab 2 | HandSignify{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='sign_generator.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="generator-feature">
+    <div class="generator-card">
+        <div class="generator-header">
+            <h2>Text → Sign</h2>
+            <p>Convert text into sign language.</p>
+        </div>
+
+        <div id="textToSignPanel" class="tab-content active" style="display: block;">
+            <div class="feature-panel">
+                <h3>Instant Translation</h3>
+                <p class="text-muted mb-4">Enter text to see the corresponding sign language alphabet images.</p>
+
+                <form id="generatorForm">
+                    <div class="input-group-custom">
+                        <label for="inputText">Enter Your Text</label>
+                        <textarea id="inputText" class="modern-textarea"
+                            placeholder="Enter text to convert into sign language..." required></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="input-group-custom mb-0">
+                            <select id="languageSelect" class="modern-select">
+                                <option value="ASL">American Sign Language (ASL)</option>
+                                <option value="ISL">Indian Sign Language (ISL)</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="generateBtn" class="btn-generate">
+                            <span>Show Signs</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Error State -->
+                <div id="errorMessage" class="alert alert-danger mt-4 hidden"></div>
+
+                <!-- Sign Output Container -->
+                <div id="signOutput" class="sign-output-container hidden"></div>
+            </div>
+        </div>
+
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='feature-utils.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Setup Text → Sign form submission
+        const form = document.getElementById('generatorForm');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const inputText = document.getElementById('inputText').value.trim();
+
+            if (!inputText) {
+                showError('errorMessage', 'Please enter some text');
+                return;
+            }
+
+            // Clear previous error
+            document.getElementById('errorMessage').classList.add('hidden');
+
+            // Call conversion function from feature-utils.js
+            convertTextToSign(inputText, 'signOutput');
+        });
+    });
+</script>
+{% endblock %}

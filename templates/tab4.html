@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Voice-Sign | HandSignify{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='sign_generator.css') }}">
+<style>
+    .voice-status {
+        font-weight: 500;
+        margin-top: 1rem;
+        min-height: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .status-recording {
+        color: #ef4444;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .microphone-button.active {
+        background: #ef4444;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="generator-feature">
+    <div class="generator-card">
+        <div class="generator-header">
+            <h2>Voice → Sign</h2>
+            <p>Speak clearly to convert your voice into sign language.</p>
+        </div>
+
+        <div id="voiceToSignPanel" class="tab-content active" style="display: block;">
+            <div class="feature-panel">
+                <div id="micButton" class="microphone-button">
+                    <i data-lucide="mic"></i>
+                </div>
+
+                <div id="voiceStatus" class="voice-status">Tap the microphone to start</div>
+
+                <div class="transcript-section">
+                    <label class="mb-2 d-block text-muted">Transcribed Text</label>
+                    <div id="transcriptDisplay" class="transcript-display">
+                        Your words will appear here...
+                    </div>
+                </div>
+
+                <!-- Sign Output Container -->
+                <div id="signOutput" class="sign-output-container hidden"></div>
+
+                <!-- Error State -->
+                <div id="errorMessage" class="alert alert-danger mt-4 hidden"></div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='feature-utils.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const micButton = document.getElementById('micButton');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const transcriptDisplay = document.getElementById('transcriptDisplay');
+        const signOutput = document.getElementById('signOutput');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let recognition;
+        let isRecording = false;
+
+        // Check if Web Speech API is supported
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; // Stop after one phrase to make it more precise for conversion
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function () {
+                isRecording = true;
+                micButton.classList.add('active');
+                voiceStatus.textContent = "Listening...";
+                voiceStatus.className = "voice-status status-recording";
+                transcriptDisplay.textContent = "Listening...";
+                errorMessage.classList.add('hidden');
+            };
+
+            recognition.onresult = function (event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                const currentText = finalTranscript || interimTranscript;
+                transcriptDisplay.textContent = currentText;
+            };
+
+            recognition.onend = function () {
+                isRecording = false;
+                micButton.classList.remove('active');
+                voiceStatus.textContent = "Tap the microphone to start";
+                voiceStatus.className = "voice-status";
+
+                const finalResult = transcriptDisplay.textContent.trim();
+                if (finalResult && finalResult !== "Listening..." && finalResult !== "Your words will appear here...") {
+                    // Logic from Tab 2
+                    convertTextToSign(finalResult, 'signOutput');
+                }
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                let message = 'An error occurred during speech recognition.';
+
+                if (event.error === 'not-allowed') {
+                    message = 'Microphone access denied. Please enable microphone permissions.';
+                } else if (event.error === 'no-speech') {
+                    message = 'No speech detected. Please try again.';
+                }
+
+                showError('errorMessage', message);
+                micButton.classList.remove('active');
+                voiceStatus.textContent = "Error occurred";
+                voiceStatus.className = "voice-status text-danger";
+            };
+
+            micButton.addEventListener('click', function () {
+                if (isRecording) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+
+        } else {
+            micButton.style.opacity = '0.5';
+            micButton.style.cursor = 'not-allowed';
+            voiceStatus.textContent = "Speech recognition is not supported in this browser.";
+            showError('errorMessage', "Speech recognition is not supported in this browser. Please use Chrome or Edge.");
+        }
+    });
+</script>
+{% endblock %}

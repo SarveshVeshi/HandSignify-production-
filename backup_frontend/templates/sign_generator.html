@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Generator | HandSignify</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Inter:400,600,700'>
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='sign_generator.css') }}">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('home')}}">HandSignify</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('home')}}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about')}}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('guide')}}">Guide</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('sign_language')}}">Sign Language</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if session.get('logged_in') %}
+                    <li class="nav-item"><a href="{{ url_for('dashboard') }}" class="btn-primary"
+                            style="text-decoration:none;">Dashboard</a></li>
+                    {% else %}
+                    <li class="nav-item me-2"><a href="{{ url_for('login') }}" class="btn-outline"
+                            style="text-decoration:none;">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="generator-feature">
+        <div class="generator-card">
+            <div class="generator-header">
+                <h2>Sign Language Generator</h2>
+                <p>Convert your text into ASL alphabet signs instantly.</p>
+            </div>
+
+            <form id="generatorForm">
+                <div class="input-group-custom">
+                    <label for="inputText">Translate to Signs</label>
+                    <textarea id="inputText" class="modern-textarea"
+                        placeholder="Enter text to convert into sign language..." required></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="input-group-custom mb-0">
+                        <select id="languageSelect" class="modern-select">
+                            <option value="ASL">American Sign Language (ASL)</option>
+                            <option value="ISL">Indian Sign Language (ISL)</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="generateBtn" class="btn-generate">
+                        <span>Show Signs</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Loading State -->
+            <div id="loadingOverlay" class="loading-overlay hidden">
+                <div class="pulse-loader"></div>
+                <p class="text-muted">AI is processing your request...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorMessage" class="alert alert-danger mt-4 hidden"></div>
+
+            <!-- Sign Output Container -->
+            <div id="signOutput" class="sign-output-container hidden"></div>
+        </div>
+    </main>
+
+    <footer class="text-center py-4 text-muted border-top mt-5">
+        <p>&copy; 2026 HandSignify. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function convertTextToSign(text) {
+            // Convert text to uppercase and split into words
+            const words = text.toUpperCase().split(' ');
+            const signOutput = document.getElementById('signOutput');
+
+            // Clear previous output
+            signOutput.innerHTML = '';
+
+            // Process each word
+            words.forEach((word, wordIndex) => {
+                if (!word.trim()) return; // Skip empty words
+
+                // Create word container
+                const wordContainer = document.createElement('div');
+                wordContainer.className = 'word-container';
+
+                // Process each character in the word
+                for (let i = 0; i < word.length; i++) {
+                    const char = word[i];
+
+                    // Only process alphanumeric characters
+                    if (/[A-Z0-9]/.test(char)) {
+                        const img = document.createElement('img');
+                        img.className = 'letter-image';
+                        img.src = `/static/asl-images/${char}.png`;
+                        img.alt = `ASL sign for ${char}`;
+                        img.title = char;
+
+                        // Add staggered animation delay with maximum cap
+                        const calculatedDelay = (wordIndex * 0.1) + (i * 0.05);
+                        img.style.animationDelay = `${Math.min(calculatedDelay, 1.5)}s`;
+
+                        // Handle missing images gracefully by replacing with div
+                        img.onerror = function () {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'letter-image missing';
+                            placeholder.textContent = char;
+                            placeholder.title = char;
+                            placeholder.style.animationDelay = this.style.animationDelay;
+
+                            // Replace img with div to properly display text
+                            this.parentNode.replaceChild(placeholder, this);
+                        };
+
+                        wordContainer.appendChild(img);
+                    }
+                }
+
+                // Only add word container if it has images
+                if (wordContainer.children.length > 0) {
+                    signOutput.appendChild(wordContainer);
+                }
+            });
+
+            // Show output container if there's content
+            if (signOutput.children.length > 0) {
+                signOutput.classList.remove('hidden');
+                // Smooth scroll to results
+                signOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        document.getElementById('generatorForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const text = document.getElementById('inputText').value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const signOutput = document.getElementById('signOutput');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Reset UI
+            errorMessage.classList.add('hidden');
+            signOutput.classList.add('hidden');
+            generateBtn.disabled = true;
+
+            // Strict validation - check for actual alphanumeric content
+            if (!text || !/[A-Z0-9]/i.test(text)) {
+                errorMessage.textContent = 'Please enter text with letters or numbers.';
+                errorMessage.classList.remove('hidden');
+                errorMessage.classList.remove('alert-warning');
+                errorMessage.classList.add('alert-danger');
+                signOutput.classList.add('hidden'); // Ensure output stays hidden
+                generateBtn.disabled = false;
+                return;
+            }
+
+            // Soft character limit for performance (non-blocking warning)
+            if (text.length > 500) {
+                errorMessage.textContent = 'Input is very long (500+ characters). This may take a moment to render.';
+                errorMessage.classList.remove('hidden');
+                errorMessage.classList.remove('alert-danger');
+                errorMessage.classList.add('alert-warning'); // Warning, not error
+                // Continue processing - just warn user
+            }
+
+            // Show loading briefly for smooth UX
+            loadingOverlay.classList.remove('hidden');
+
+            // Use setTimeout to show loading animation briefly
+            setTimeout(() => {
+                try {
+                    convertTextToSign(text);
+                } catch (err) {
+                    console.error('Error generating signs:', err);
+                    errorMessage.textContent = 'An error occurred. Please try again.';
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                    generateBtn.disabled = false;
+                }
+            }, 300);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice-Sign & Sign-Voice Converter | HandSignify</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Inter:400,600,700'>
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='sign_generator.css') }}">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('home')}}">HandSignify</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('home')}}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about')}}">About Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('sign_text_converter')}}">Sign-Text & Text-Sign</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('voice_converter')}}">Voice-Sign & Sign-Voice</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if session.get('logged_in') %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            {{name}}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('reset_email') }}">Reset Email</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('update_password') }}">Reset Password</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{{url_for('logout')}}">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item me-2"><a href="{{ url_for('login') }}" class="btn-outline"
+                            style="text-decoration:none;">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="generator-feature">
+        <div class="generator-card">
+            <div class="generator-header">
+                <h2>Voice-Sign & Sign-Voice Converter</h2>
+                <p>Convert between voice and sign language in both directions.</p>
+            </div>
+
+            <!-- Feature Toggle Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" data-tab="voiceToSignPanel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    Voice → Sign
+                </button>
+                <button class="tab-button" data-tab="signToVoicePanel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    Sign → Voice
+                </button>
+            </div>
+
+            <!-- Voice → Sign Panel -->
+            <div id="voiceToSignPanel" class="tab-content active">
+                <div class="feature-panel">
+                    <h3>Voice → Sign: Speech to Signs</h3>
+                    <p class="text-muted mb-4">Speak into your microphone and see the corresponding sign language
+                        alphabet.</p>
+
+                    <!-- Browser Compatibility Warning -->
+                    <div id="browserWarning" class="alert alert-warning hidden">
+                        Speech recognition not supported in this browser. Please use Chrome or Edge.
+                    </div>
+
+                    <!-- Microphone UI -->
+                    <div class="microphone-section">
+                        <div id="microphoneButton" class="microphone-button">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </div>
+
+                        <!-- Listening Indicator -->
+                        <div id="listeningIndicator" class="listening-indicator hidden">
+                            <span>Listening</span>
+                            <div class="dots">
+                                <span>.</span><span>.</span><span>.</span>
+                            </div>
+                        </div>
+
+                        <!-- Control Buttons -->
+                        <div class="voice-controls">
+                            <button type="button" id="startListeningBtn" class="btn-generate">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                                </svg>
+                                <span>Start Listening</span>
+                            </button>
+                            <button type="button" id="stopListeningBtn" class="btn-outline hidden">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <rect x="9" y="9" width="6" height="6"></rect>
+                                </svg>
+                                <span>Stop Listening</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Transcript Display -->
+                    <div id="transcriptSection" class="transcript-section hidden">
+                        <label>Recognized Text:</label>
+                        <div id="transcriptDisplay" class="transcript-display"></div>
+                    </div>
+
+                    <!-- Error Message (Voice-specific) -->
+                    <div id="voiceErrorMessage" class="alert alert-danger mt-4 hidden"></div>
+
+                    <!-- Sign Output Container -->
+                    <div id="voiceSignOutput" class="sign-output-container hidden"></div>
+                </div>
+            </div>
+
+            <!-- Sign → Voice Panel (NEW FEATURE) -->
+            <div id="signToVoicePanel" class="tab-content">
+                <div class="feature-panel">
+                    <h3>Sign → Voice: Signs to Speech</h3>
+                    <p class="text-muted mb-4">Use your camera to show signs, and the system will speak the recognized
+                        text.</p>
+
+                    <div class="controls mb-3">
+                        <button id="startCameraButtonVoice" class="btn-primary">Start Camera</button>
+                        <button id="closeCameraButtonVoice" class="btn-danger-custom hidden">Stop Camera</button>
+                    </div>
+
+                    <!-- Camera Feed Container -->
+                    <div id="cameraFeedContainerVoice" class="camera-feed-box hidden">
+                        <img id="cameraFeedVoice" src="" alt="Camera Stream">
+                    </div>
+
+                    <!-- Prediction Display & Speech Controls -->
+                    <div id="predictionSection" class="transcript-section mt-4 hidden">
+                        <label>Detected Sign:</label>
+                        <div id="predictionDisplay" class="transcript-display"></div>
+
+                        <div class="voice-controls mt-3">
+                            <button id="speakPredictionBtn" class="btn-generate">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                                </svg>
+                                <span>Speak</span>
+                            </button>
+
+                            <!-- Advanced Speech Controls (Optional) -->
+                            <button id="toggleSpeechControlsBtn" class="btn-outline">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24">
+                                    </path>
+                                </svg>
+                                <span>Voice Settings</span>
+                            </button>
+                        </div>
+
+                        <!-- Optional Advanced Controls -->
+                        <div id="advancedSpeechControls" class="mt-3 hidden">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label for="speechRate" class="form-label">Speed: <span
+                                            id="rateValue">1.0</span>x</label>
+                                    <input type="range" id="speechRate" class="form-range" min="0.5" max="2" step="0.1"
+                                        value="1.0">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label for="speechPitch" class="form-label">Pitch: <span
+                                            id="pitchValue">1.0</span></label>
+                                    <input type="range" id="speechPitch" class="form-range" min="0.5" max="2" step="0.1"
+                                        value="1.0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box mt-4">
+                        <p class="mb-0"><strong>Tip:</strong> The system will detect signs and store the most recent
+                            prediction. Click "Speak" to hear it pronounced.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center py-4 text-muted border-top mt-5">
+        <p>&copy; 2026 HandSignify. All rights reserved.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='camera-controller.js') }}"></script>
+    <script src="{{ url_for('static', filename='sign-voice.js') }}"></script>
+    <script src="{{ url_for('static', filename='voice-sign.js') }}"></script>
+
+    <script>
+        // Controllers
+        let signVoiceController = null;
+        let cameraControllerVoice = null;
+        let latestPrediction = '';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Setup feature toggle
+            setupFeatureToggle();
+
+            // Initialize Voice → Sign (existing feature)
+            // voice-sign.js handles this automatically
+
+            // Initialize Sign → Voice (NEW feature)
+            initSignToVoice();
+        });
+
+        function setupFeatureToggle() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const targetPanel = this.getAttribute('data-tab');
+
+                    // Update active states
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Show target panel, hide others
+                    document.querySelectorAll('.tab-content').forEach(panel => {
+                        panel.classList.remove('active');
+                    });
+                    document.getElementById(targetPanel).classList.add('active');
+
+                    // Stop cameras when switching panels
+                    if (targetPanel === 'voiceToSignPanel') {
+                        if (cameraControllerVoice) {
+                            cameraControllerVoice.stopCamera();
+                        }
+                        // Voice → Sign stops automatically via voice-sign.js
+                    } else if (targetPanel === 'signToVoicePanel') {
+                        // Stop Voice → Sign listening (handled by voice-sign.js)
+                    }
+                });
+            });
+        }
+
+        function initSignToVoice() {
+            // Initialize camera controller for Sign → Voice
+            cameraControllerVoice = initCameraController({
+                startButtonId: 'startCameraButtonVoice',
+                stopButtonId: 'closeCameraButtonVoice',
+                feedElementId: 'cameraFeedVoice',
+                containerId: 'cameraFeedContainerVoice',
+                videoFeedUrl: "{{ url_for('video_feed') }}",
+                onPrediction: handlePrediction
+            });
+
+            // Initialize speech synthesis controller
+            signVoiceController = initSignVoiceController({
+                speakButtonId: 'speakPredictionBtn',
+                predictionDisplayId: 'predictionDisplay',
+                rateControlId: 'speechRate',
+                pitchControlId: 'speechPitch'
+            });
+
+            // Setup speech controls toggle
+            const toggleBtn = document.getElementById('toggleSpeechControlsBtn');
+            const advancedControls = document.getElementById('advancedSpeechControls');
+
+            if (toggleBtn && advancedControls) {
+                toggleBtn.addEventListener('click', () => {
+                    advancedControls.classList.toggle('hidden');
+                });
+            }
+
+            // Update live values for rate and pitch
+            const rateInput = document.getElementById('speechRate');
+            const pitchInput = document.getElementById('speechPitch');
+            const rateValue = document.getElementById('rateValue');
+            const pitchValue = document.getElementById('pitchValue');
+
+            if (rateInput && rateValue) {
+                rateInput.addEventListener('input', (e) => {
+                    rateValue.textContent = e.target.value;
+                });
+            }
+
+            if (pitchInput && pitchValue) {
+                pitchInput.addEventListener('input', (e) => {
+                    pitchValue.textContent = e.target.value;
+                });
+            }
+
+            // Simulate prediction updates (in real scenario, this would come from WebSocket or polling)
+            // For now, we'll use a simple approach: user can manually input what was detected
+            setupPredictionSimulation();
+        }
+
+        function handlePrediction(text) {
+            latestPrediction = text;
+            const predictionDisplay = document.getElementById('predictionDisplay');
+            const predictionSection = document.getElementById('predictionSection');
+
+            if (predictionDisplay) {
+                predictionDisplay.textContent = text;
+                predictionSection.classList.remove('hidden');
+            }
+
+            if (signVoiceController) {
+                signVoiceController.updatePredictionDisplay(text);
+            }
+        }
+
+        function setupPredictionSimulation() {
+            // Since we can't directly intercept ML model predictions from the video stream overlay,
+            // we'll add a simple input method for testing
+            // In production, this could be replaced with WebSocket/SSE from backend
+
+            const predictionSection = document.getElementById('predictionSection');
+            const startCameraBtn = document.getElementById('startCameraButtonVoice');
+
+            if (startCameraBtn) {
+                startCameraBtn.addEventListener('click', () => {
+                    // Show prediction section when camera starts
+                    setTimeout(() => {
+                        predictionSection.classList.remove('hidden');
+                        // Simulate a prediction for demo purposes
+                        // In production, this would come from the ML model
+                        handlePrediction('A'); // Default/placeholder
+                    }, 1000);
+                });
+            }
+
+            // Manual input for testing (optional fallback)
+            // Users can click on the prediction display to edit it
+            const predictionDisplay = document.getElementById('predictionDisplay');
+            if (predictionDisplay) {
+                predictionDisplay.addEventListener('click', () => {
+                    const newPrediction = prompt('Enter the sign you showed to the camera:', latestPrediction || 'A');
+                    if (newPrediction) {
+                        handlePrediction(newPrediction.toUpperCase());
+                    }
+                });
+                predictionDisplay.style.cursor = 'pointer';
+                predictionDisplay.title = 'Click to manually set prediction';
+            }
+        }
+
+        // Shared convertTextToSign function for Voice → Sign panel
+        function convertTextToSign(text) {
+            const words = text.toUpperCase().split(' ');
+            const signOutput = document.getElementById('voiceSignOutput');
+
+            signOutput.innerHTML = '';
+
+            words.forEach((word, wordIndex) => {
+                if (!word.trim()) return;
+
+                const wordContainer = document.createElement('div');
+                wordContainer.className = 'word-container';
+
+                for (let i = 0; i < word.length; i++) {
+                    const char = word[i];
+
+                    if (/[A-Z0-9]/.test(char)) {
+                        const img = document.createElement('img');
+                        img.className = 'letter-image';
+                        img.src = `/static/asl-images/${char}.png`;
+                        img.alt = `ASL sign for ${char}`;
+                        img.title = char;
+
+                        const calculatedDelay = (wordIndex * 0.1) + (i * 0.05);
+                        img.style.animationDelay = `${Math.min(calculatedDelay, 1.5)}s`;
+
+                        img.onerror = function () {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'letter-image missing';
+                            placeholder.textContent = char;
+                            placeholder.title = char;
+                            placeholder.style.animationDelay = this.style.animationDelay;
+                            this.parentNode.replaceChild(placeholder, this);
+                        };
+
+                        wordContainer.appendChild(img);
+                    }
+                }
+
+                if (wordContainer.children.length > 0) {
+                    signOutput.appendChild(wordContainer);
+                }
+            });
+
+            if (signOutput.children.length > 0) {
+                signOutput.classList.remove('hidden');
+                signOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    </script>
+
+</body>
+
+</html>

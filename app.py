@@ -1,20 +1,14 @@
 # I am using mediapipe as a hand landmark processing and prediction and landmark detector and a Random Forest classifier as sign classifier.
 
-# ✅ FIX: Eventlet monkey-patching MUST be the very first thing.
-# Without this, OpenCV's blocking cap.read() freezes the eventlet hub,
-# preventing socketio.emit() from delivering WebSocket messages.
-import eventlet
-eventlet.monkey_patch()
 
-from wsgiref.simple_server import WSGIServer
 from flask import Flask, jsonify, render_template, url_for, redirect, flash, session, request, Response
 import sys
-import os
-import glob
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
+from flask_socketio import SocketIO, emit
+import socketio
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Length, ValidationError, Email, EqualTo
 from flask_bcrypt import Bcrypt
@@ -26,23 +20,13 @@ import re
 import pickle
 import cv2
 import mediapipe as mp
+from mediapipe import solutions as mp_solutions
 import numpy as np
 from services.sign_service import sign_service
-from flask_socketio import SocketIO, emit
-import threading
 
 app = Flask(__name__)
 
 CORS(app)  # Allow cross-origin requests for all routes
-
-# -------------------SocketIO Configuration-------------------
-# Initialize SocketIO with eventlet async mode for real-time predictions
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
-
-# Shared camera instance with lock for thread safety
-camera = None
-camera_lock = threading.Lock()
-camera_active = False
 
 # -------------------Encrypt Password using Hash Func-------------------
 bcrypt = Bcrypt(app)
@@ -53,6 +37,9 @@ app.config['SECRET_KEY'] = 'thisisasecretkey'
 serializer = Serializer(app.config['SECRET_KEY'])
 db = SQLAlchemy(app)
 app.app_context().push()
+
+# -------------------Socket.IO Setup-------------------
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 
 login_manager = LoginManager()
@@ -87,43 +74,10 @@ class User(db.Model, UserMixin):
 
 # -------------------Welcome or Home Page-------------
 
-import os
-import glob
-
-# ... (existing imports)
-
-# -------------------Helper for Dynamic Background Video-------------------
-def get_background_video():
-    """
-    Scans static/videos/ for the first available video file.
-    Returns a dict with 'url' and 'timestamp' (for cache busting).
-    Returns None if no video is found.
-    """
-    video_dir = os.path.join(app.root_path, 'static', 'videos')
-    # Support common video formats
-    video_files = glob.glob(os.path.join(video_dir, '*.mp4')) + \
-                  glob.glob(os.path.join(video_dir, '*.webm'))
-    
-    if video_files:
-        # Take the first video found
-        video_path = video_files[0]
-        video_filename = os.path.basename(video_path)
-        # Get modification time for cache busting
-        timestamp = int(os.path.getmtime(video_path))
-        
-        return {
-            'url': url_for('static', filename=f'videos/{video_filename}'),
-            'timestamp': timestamp
-        }
-    return None
-
-# -------------------Welcome or Home Page-------------
-
 @app.route('/', methods=['GET', 'POST'])
 def home():
     session.clear()
-    video_data = get_background_video()
-    return render_template('home.html', video_data=video_data)
+    return render_template('home.html')
 # ----------------------------------------------------
 
 # -------------------feed back Page-----------------------
@@ -139,25 +93,42 @@ def discover_more():
     return render_template('discover_more.html')
 # ----------------------------------------------------
 
-# ------------------- New Unified Pages (Navigation Restructure) --------
+# -------------------Guide Page-----------------------
+@app.route('/guide', methods=['GET', 'POST'])
+def guide():
+    return render_template('guide.html')
+# ----------------------------------------------------
 
-# Sign-Text & Text-Sign Converter (combines Sign → Text camera + Text → Sign images)
-@app.route('/sign-text-converter', methods=['GET'])
-def sign_text_converter():
+
+# ------------------- New Split Navigation Pages -------------------
+
+# Tab 1: Sign → Text (Sign-Text)
+@app.route('/tab-1', methods=['GET'])
+def tab_1():
     name = session.get('name', 'Guest')
-    return render_template('sign_text_converter.html', name=name)
+    return render_template('sign_text_converter.html', name=name, active_panel='signToTextPanel')
 
-# Voice-Sign & Sign-Voice Converter (combines Voice → Sign + Sign → Voice)
-@app.route('/voice-converter', methods=['GET'])
-def voice_converter():
-    return render_template('voice_converter.html')
+# Tab 2: Text → Sign (Text-Sign)
+@app.route('/tab-2', methods=['GET'])
+def tab_2():
+    return render_template('sign_text_converter.html', active_panel='textToSignPanel')
 
+# Tab 3: Sign → Voice (Sign-Voice)
+@app.route('/tab-3', methods=['GET'])
+def tab_3():
+    name = session.get('name', 'Guest')
+    return render_template('sign_text_converter.html', name=name, active_panel='voiceToSignPanel')
+
+# Tab 4: Voice → Sign (Voice-Sign)
+@app.route('/tab-4', methods=['GET'])
+def tab_4():
+    return render_template('sign_text_converter.html', active_panel='signToVoicePanel')
 
 @app.route('/sign-language', methods=['GET'])
 def sign_language():
-    # Old Text → Sign generator - redirect to new unified page
-    flash('This page has moved! Redirecting to Sign-Text & Text-Sign converter.', 'info')
-    return redirect(url_for('sign_text_converter'))
+    # Old generate route - redirect to the new text-to-sign tab
+    flash('This page has moved! Redirecting to Text-to-Sign converter.', 'info')
+    return redirect(url_for('tab_2'))
 
 @app.route('/generate_sign_video_api', methods=['POST'])
 def generate_sign_video_api():
@@ -169,8 +140,17 @@ def generate_sign_video_api():
     return jsonify(result)
 # ----------------------------------------------------
 
+@app.route('/sign_text_converter', methods=['GET'])
+def sign_text_converter():
+    name = session.get('name', 'Guest')
+    active_panel = request.args.get('panel', 'signToTextPanel')
+    return render_template('sign_text_converter.html', name=name, active_panel=active_panel)
 
-# -------------------Login Page-------------------
+@app.route('/voice_converter', methods=['GET'])
+def voice_converter():
+    return render_template('voice_converter.html')
+
+# --------------------Login Page-------------------
 class LoginForm(FlaskForm):
     username = StringField(label='username', validators=[InputRequired()], render_kw={"placeholder": "Username"})
     email = StringField(label='email', validators=[InputRequired(), Email()], render_kw={"placeholder": "Email"})
@@ -382,7 +362,43 @@ def update_password():
 # -----------------------------  end  ---------------------------
 
 
-# --------------------------- Machine Learning ------------------
+# ------------------------- Data Refinement ---------------------
+def refine_text(raw_text: str) -> str:
+    """
+    Deterministic cleaning logic for recognized sign language text.
+    """
+    if not raw_text:
+        return ""
+    
+    # 1. Split text into words using whitespace
+    words = raw_text.split()
+    
+    # 2. Remove single-letter noise except "I", "A"
+    valid_single_letters = {"I", "A"}
+    cleaned_words = []
+    for word in words:
+        upper_word = word.upper().replace('.', '').replace(',', '')
+        if len(upper_word) > 1 or upper_word in valid_single_letters:
+            cleaned_words.append(word)
+            
+    # 3. Remove consecutive duplicate words
+    # 4. Remove excessive repetition (max 2 consecutive occurrences rule simplified to 1 for clarity)
+    final_words = []
+    for word in cleaned_words:
+        if not final_words or word != final_words[-1]:
+            final_words.append(word)
+            
+    # 5 & 6. Join back into a clean sentence
+    return " ".join(final_words)
+
+@socketio.on('refine_text')
+def handle_refine_text(data):
+    raw_text = data.get('text', '')
+    refined = refine_text(raw_text)
+    emit('refined_text_update', {'refined_text': refined})
+
+# -----------------------------  end  ---------------------------
+
 # --------------------------- Machine Learning ------------------
 try:
     model_dict = pickle.load(open('./models/model.p', 'rb'))
@@ -390,86 +406,32 @@ try:
 except Exception as e:
     print("Error loading the model:", e)
     model = None
-
-# -------------------Camera Helper Functions-------------------
-def get_camera():
-    """Get or create shared camera instance with thread-safe locking."""
-    global camera
-    with camera_lock:
-        if camera is None or not camera.isOpened():
-            camera = cv2.VideoCapture(0)
-            if not camera.isOpened():
-                sys.stderr.write("ERROR: Failed to open camera\n")
-                return None
-        return camera
-
-def release_camera():
-    """Release camera resource safely."""
-    global camera, camera_active
-    with camera_lock:
-        if camera is not None:
-            camera.release()
-            camera = None
-        camera_active = False
-    sys.stderr.write("DEBUG: Camera released\n")
-
-# -------------------WebSocket Event Handlers-------------------
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Clean up camera when WebSocket disconnects."""
-    sys.stderr.write("DEBUG: WebSocket disconnected, releasing camera\n")
-    release_camera()
-
-# -------------------Video Frame Generation-------------------
-# ✅ FIX: Removed @app.route decorator — this function is only called
-# internally by video_feed() as a generator, not as a direct HTTP endpoint.
+@app.route('/generate_frames', methods=['POST'])
 def generate_frames():
-    """Generate video frames with MediaPipe hand detection and ML predictions."""
-    global camera_active
-    
     sys.stderr.write("DEBUG: generate_frames called\n")
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        sys.stderr.write("DEBUG: Failed to open camera\n")
+    else:
+        sys.stderr.write("DEBUG: Camera opened successfully\n")
     
-    # Prevent multiple concurrent streams
-    if camera_active:
-        sys.stderr.write("WARNING: Camera already active\n")
-        return Response("Camera already in use", status=409)
+    mp_hands = mp_solutions.hands
+    mp_drawing = mp_solutions.drawing_utils
+    mp_drawing_styles = mp_solutions.drawing_styles
+
+    hands = mp_hands.Hands(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
     
-    camera_active = True
-    
-    # Get shared camera instance
-    cap = get_camera()
-    if cap is None:
-        camera_active = False
-        return Response("Camera unavailable", status=503)
-    
-    # Initialize MediaPipe
-    mp_hands = mp.solutions.hands
-    mp_drawing = mp.solutions.drawing_utils
-    mp_drawing_styles = mp.solutions.drawing_styles
-    hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
-    
-    # ✅ FIX: Labels dict keyed by STRING class labels to match model output.
-    # The Random Forest model's .predict() returns string class labels
-    # like '0', '1', '2', etc. — NOT integers.
-    labels_dict = {
-        '0': 'A', '1': 'B', '2': 'C', '3': 'D', '4': 'E', '5': 'F', '6': 'G', '7': 'H', '8': 'I', 
-        '9': 'J', '10': 'K', '11': 'L', '12': 'M', '13': 'N', '14': 'O', '15': 'P', '16': 'Q', 
-        '17': 'R', '18': 'S', '19': 'T', '20': 'U', '21': 'V', '22': 'W', '23': 'X', '24': 'Y', 
-        '25': 'Z', '26': 'Hello', '27': 'Done', '28': 'Thank You', '29': 'I Love you', 
-        '30': 'Sorry', '31': 'Please', '32': 'You are welcome.'
-    }
-    
-    # Prediction stability tracking
-    last_prediction = None
-    stable_count = 0
-    STABILITY_THRESHOLD = 15  # ~0.5 seconds at 30 FPS
-    
+    last_emitted_char = None
+
+    labels_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J', 10: 'K', 11: 'L', 12: 'M',
+               13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z', 26: 'Hello', 27: 'Done', 28: 'Thank You', 29: 'I Love you', 30: 'Sorry', 31: 'Please', 32: 'You are welcome.' }
+
     try:
         while True:
             data_aux = []
             x_ = []
             y_ = []
-            
+
             ret, frame = cap.read()
             if not ret:
                 sys.stderr.write("DEBUG: Failed to read frame\n")
@@ -477,104 +439,74 @@ def generate_frames():
             
             H, W, _ = frame.shape
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            
+
             try:
                 results = hands.process(frame_rgb)
             except Exception as e:
-                sys.stderr.write(f"DEBUG: MediaPipe error: {e}\n")
+                sys.stderr.write(f"DEBUG: Mediapipe error: {e}\n")
                 continue
-            
+
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
-                    # Draw hand landmarks on frame
                     mp_drawing.draw_landmarks(
                         frame,
                         hand_landmarks,
                         mp_hands.HAND_CONNECTIONS,
                         mp_drawing_styles.get_default_hand_landmarks_style(),
-                        mp_drawing_styles.get_default_hand_connections_style()
-                    )
-                
-                # Extract features for prediction
+                        mp_drawing_styles.get_default_hand_connections_style())
+
+                # ... Rest of the hand landmark processing and prediction code ...
                 data_aux = []
                 x_ = []
                 y_ = []
-                
+
                 for i in range(len(hand_landmarks.landmark)):
                     x = hand_landmarks.landmark[i].x
                     y = hand_landmarks.landmark[i].y
+
                     x_.append(x)
                     y_.append(y)
-                
+
                 for i in range(len(hand_landmarks.landmark)):
                     x = hand_landmarks.landmark[i].x
                     y = hand_landmarks.landmark[i].y
                     data_aux.append(x - min(x_))
                     data_aux.append(y - min(y_))
-                
-                # Bounding box coordinates
+
                 x1 = int(min(x_) * W) - 10
                 y1 = int(min(y_) * H) - 10
+
                 x2 = int(max(x_) * W) - 10
                 y2 = int(max(y_) * H) - 10
-                
-                try:
-                    # Make prediction
-                    # Ensure input shape matches training (1, 42)
-                    input_data = np.asarray(data_aux).reshape(1, -1)
-                    prediction = model.predict(input_data)
-                    
-                    # DEBUG: Print raw prediction details
-                    # sys.stderr.write(f"DEBUG: Raw Prediction: {prediction}\n")
 
-                    # ✅ FIX: Handle both string labels and integer indices
-                    predicted_label = prediction[0]
-                    if isinstance(predicted_label, (int, np.integer)):
-                        predicted_character = labels_dict.get(str(predicted_label), '?')
-                    else:
-                        predicted_character = labels_dict.get(str(predicted_label), str(predicted_label))
+                try:
+                    prediction = model.predict([np.asarray(data_aux)])
+                    predicted_character = labels_dict[int(prediction[0])]
                     
-                    # EMIT PREDICTION VIA WEBSOCKET (for debugging/visualization)
-                    socketio.emit('prediction', {
-                        'character': predicted_character,
-                        'timestamp': datetime.now().isoformat()
-                    }, namespace='/')
+                    if predicted_character != last_emitted_char:
+                        # Only emit on change to reduce traffic
+                        socketio.emit('prediction', {'character': predicted_character}, namespace='/')
+                        socketio.emit('stable_prediction', {'character': predicted_character}, namespace='/')
+                        last_emitted_char = predicted_character
                     
-                    # STABILITY TRACKING
-                    if predicted_character == last_prediction:
-                        stable_count += 1
-                    else:
-                        stable_count = 0
-                        last_prediction = predicted_character
-                    
-                    # EMIT STABLE PREDICTION ONLY (for text accumulation and speech)
-                    if stable_count == STABILITY_THRESHOLD:
-                        sys.stderr.write(f"DEBUG: STABLE PREDICTION: {predicted_character}\n")
-                        socketio.emit('stable_prediction', {
-                            'character': predicted_character,
-                            'timestamp': datetime.now().isoformat()
-                        }, namespace='/')
-                        stable_count = 0  # Reset to allow repeated characters with pause
-                    
-                    # Draw on frame (existing MJPEG overlay)
+                    # Yield to event loop to keep WebSocket alive
+                    socketio.sleep(0)
+
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
-                    cv2.putText(frame, predicted_character, (x1, y1 - 10),
-                               cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3, cv2.LINE_AA)
-                    
-                    # sys.stderr.write(f"PREDICT: {predicted_character} (stable={stable_count}/{STABILITY_THRESHOLD})\n")
-                
+                    cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,cv2.LINE_AA)
+                    # flash(f'Predicted Character is {predicted_character}.', category='success')
+
                 except Exception as e:
-                    # ✅ FIX: Log prediction errors instead of silently swallowing them
-                    sys.stderr.write(f"PREDICTION ERROR: {e}\n")
-            
-            # Encode frame for MJPEG stream
+                       pass
+                       #print(e)
+                       # Handle prediction error
+
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    
     finally:
-        sys.stderr.write("DEBUG: Stream ended, releasing camera\n")
-        release_camera()
+        sys.stderr.write("DEBUG: Releasing camera\n")
+        cap.release()
 
 @app.route('/video_feed')
 def video_feed():
@@ -596,4 +528,4 @@ def shutdown():
 # -----------------------------  end  ---------------------------
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, use_reloader=False, host='127.0.0.1', port=5000)
+    socketio.run(app, debug=True, use_reloader=False, port=5001)

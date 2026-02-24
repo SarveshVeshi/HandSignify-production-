@@ -1,0 +1,279 @@
+import os
+
+TEMPLATE = os.path.join(os.path.dirname(__file__), '..', 'templates', 'about.html')
+
+# ── STATIC CONTENT ──
+HEADER = '''{% extends "base.html" %}
+
+{% block title %}About Us | HandSignify{% endblock %}
+
+{% block content %}
+<!-- ── Hero Header ──────────────────────────────────────────────── -->
+<section class="hs-hero" data-animate="section">
+    <div class="hs-hero-grid">
+        <div class="hs-hero-copy">
+            <p class="hs-eyebrow">
+                <i data-lucide="heart" style="width:11px;height:11px;"></i>
+                Our Story
+            </p>
+            <h1 class="hs-hero-title">
+                Empowering <span>communication</span> for all.
+            </h1>
+            <p class="hs-hero-subtitle">
+                Born from a passion to break down barriers, HandSignify combines cutting-edge AI with human-centered
+                design to make sign language accessible to everyone.
+            </p>
+            <div class="hs-hero-cta">
+                <a href="{{ url_for('sign_text_converter') }}" class="btn-pill-white">
+                    Experience It
+                    <span class="btn-arrow-right">&rarr;</span>
+                </a>
+            </div>
+        </div>
+        <div class="hs-hero-visual">
+            <div class="hs-hero-panel hs-hero-panel--primary"
+                style="background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(59,111,239,0.05) 100%);">
+                <h3>Our Mission</h3>
+                <p>Make sign language recognition universally accessible through AI, creating real-time translation that empowers every conversation.</p>
+            </div>
+            <div class="hs-hero-panel hs-hero-panel--secondary"
+                style="background: linear-gradient(135deg, rgba(168,85,247,0.06) 0%, rgba(236,72,153,0.05) 100%);">
+                <h3>Our Vision</h3>
+                <p>A world where technology bridges all communication gaps, and no one is left behind in the digital age.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Philosophy ── -->
+<section class="hs-section" data-animate="section" style="padding: 5rem 2rem;">
+    <div style="max-width: 1100px; margin-inline: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem;">
+        <div class="hs-phil-card">
+            <h4 style="font-weight:800; color:#0f172a; margin-bottom:1rem;">Accessibility First</h4>
+            <p style="color:#64748b; font-size:0.95rem; line-height:1.7;">Inclusion is at our core. We build tools that remove technical barriers and gatekeeping.</p>
+        </div>
+        <div class="hs-phil-card">
+            <h4 style="font-weight:800; color:#0f172a; margin-bottom:1rem;">Person-Centered</h4>
+            <p style="color:#64748b; font-size:0.95rem; line-height:1.7;">Technology serves people. We listen to the community to shape every single update.</p>
+        </div>
+        <div class="hs-phil-card">
+            <h4 style="font-weight:800; color:#0f172a; margin-bottom:1rem;">Always Improving</h4>
+            <p style="color:#64748b; font-size:0.95rem; line-height:1.7;">AI evolves, and so do we. Continuous iteration ensures smarter results every day.</p>
+        </div>
+    </div>
+</section>
+'''
+
+# ── TEAM MEMBERS DATA ──
+MEMBERS = [
+    {
+        'id': '01', 'initials':'SV', 'name':'Sarvesh Veshi', 'role':'Backend Architect',
+        'grad':'linear-gradient(135deg,#10b981,#059669)', 'ac':'#10b981',
+        'email':'sarvesh@handsignify.com',
+        'desc':'Engineered the core API and data pipelines.',
+        'bio':'Sarvesh is the lead architect. He designed the high-throughput systems that power our real-time AI translation core.',
+        'motto':'Refining the logic of accessible tech.',
+        'skills': ['Python', 'PostgreSQL', 'System Design']
+    },
+    {
+        'id': '02', 'initials':'JG', 'name':'Janhavi Godase', 'role':'Systems Analyst',
+        'grad':'linear-gradient(135deg,#6366f1,#4f46e5)', 'ac':'#6366f1',
+        'email':'janhavi@handsignify.com',
+        'desc':'Mapping requirements to human solutions.',
+        'bio':'Janhavi ensures every technical feature solves a human problem. She bridges the gap between vision and code execution.',
+        'motto':'Empathy is the ultimate interface.',
+        'skills': ['User flows', 'Agile', 'Documentation']
+    },
+    {
+        'id': '03', 'initials':'VK', 'name':'Vedant Kondvilkar', 'role':'Frontend Engineer',
+        'grad':'linear-gradient(135deg,#f97316,#ea580c)', 'ac':'#f97316',
+        'email':'vedant@handsignify.com',
+        'desc':'Crafting interaction and visual performance.',
+        'bio':'Vedant designs and builds the visual face of HandSignify, focusing on high-end performance and clean motion semantics.',
+        'motto':'Good design is invisible yet felt.',
+        'skills': ['GSAP', 'React', 'Motion Styling']
+    },
+    {
+        'id': '04', 'initials':'AG', 'name':'Atharv Ghadigaonkar', 'role':'UX Researcher',
+        'grad':'linear-gradient(135deg,#06b6d4,#0891b2)', 'ac':'#06b6d4',
+        'email':'atharv@handsignify.com',
+        'desc':'Validating decisions through data and empathy.',
+        'bio':'Atharv ensures our AI remains human. He performs deep research to keep the experience intuitive and helpful.',
+        'motto':'Users inspire every line of code.',
+        'skills': ['Insights', 'Testing', 'Asset Mgmt']
+    }
+]
+
+LI_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>'
+GH_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>'
+
+def get_cards_html():
+    html = ""
+    for m in MEMBERS:
+        skills = "".join([f'<span class="tm-skill-tag">{s}</span>' for s in m['skills']])
+        html += f"""
+        <div class="tm-book-wrap">
+            <div class="tm-book">
+                <!-- INSIDE RIGHT -->
+                <div class="tm-book-content">
+                    <div class="tm-book-inner">
+                        <div class="tm-av-s" style="background:{m['grad']};">{m['initials']}</div>
+                        <h3 class="tm-b-name">{m['name']}</h3>
+                        <p class="tm-b-bio">{m['bio']}</p>
+                        
+                        <div class="tm-skills-box">
+                            <div class="tm-skills-list">{skills}</div>
+                        </div>
+
+                        <div class="tm-b-footer">
+                            <div class="tm-b-socials">
+                                <a href="#" class="tm-b-social">{LI_SVG}</a>
+                                <a href="#" class="tm-b-social">{GH_SVG}</a>
+                            </div>
+                            <a href="mailto:{m['email']}" class="tm-b-contact" style="background:{m['ac']};">
+                                Contact
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INSIDE LEFT -->
+                <div class="tm-book-inside-cover">
+                    <div class="tm-ic-top">
+                        <span class="tm-ic-no">MEMBER <span>{m['id']}</span></span>
+                    </div>
+                    <div class="tm-ic-motto">{m['motto']}</div>
+                    <div class="tm-ic-brand">HandSignify</div>
+                </div>
+
+                <div class="tm-book-pages"></div>
+                
+                <!-- COVER -->
+                <div class="tm-book-cover">
+                    <div class="tm-av" style="background:{m['grad']};">{m['initials']}</div>
+                    <h3 class="tm-name">{m['name']}</h3>
+                    <p class="tm-role" style="color:{m['ac']};">{m['role']}</p>
+                    <p class="tm-desc">{m['desc']}</p>
+                </div>
+            </div>
+        </div>"""
+    return html
+
+TEAM_SECTION = f'''
+<!-- ── Team Section (Perfect Clean Design) ── -->
+<section id="team-section" class="tm-section" data-animate="section">
+    <div class="tm-header">
+        <p class="hs-eyebrow">The Collective</p>
+        <h2 class="tm-title">Meet the creators.</h2>
+        <p class="tm-subtitle">A team of specialists dedicated to making the digital world more inclusive for everyone.</p>
+    </div>
+    <div class="tm-grid">
+        {get_cards_html()}
+    </div>
+</section>
+
+<style>
+    .tm-section {{ padding: 10rem 2rem; text-align: center; position: relative; background: #ffffff; }}
+    .tm-header {{ margin-bottom: 5.5rem; }}
+    .tm-title {{ font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; color: #0f172a; margin-block: 0.5rem; }}
+    .tm-subtitle {{ color: #64748b; font-size: 1.1rem; max-width: 580px; margin-inline: auto; line-height: 1.6; font-weight: 500; }}
+    
+    .tm-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; max-width: 1200px; margin-inline: auto; }}
+
+    .tm-book-wrap {{ perspective: 2500px; height: 480px; width: 100%; display: flex; justify-content: center; }}
+    .tm-book {{ 
+        position: relative; width: 280px; height: 440px; 
+        transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; 
+    }}
+
+    .tm-book-wrap:hover .tm-book {{ transform: rotateY(20deg) translateX(8%); }}
+    .tm-book-wrap:hover .tm-book-cover {{ transform: rotateY(-155deg); }}
+
+    /* ── COVER ── */
+    .tm-book-cover {{
+        position: absolute; inset: 0; z-index: 20;
+        background: rgba(255, 255, 255, 0.1); 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px 28px 28px 4px; 
+        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+        transform-origin: left; transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 3rem 1.8rem; box-shadow: 10px 15px 40px rgba(0,0,0,0.06); backface-visibility: hidden;
+    }}
+    .tm-book-cover::after {{
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 12px;
+        background: rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.05); border-radius: 4px 0 0 4px;
+    }}
+
+    /* ── INSIDE LEFT ── */
+    .tm-book-inside-cover {{
+        position: absolute; inset: 0; z-index: 15; background: #f8fafc;
+        border-radius: 4px 28px 28px 4px; transform: rotateY(180deg); 
+        display: flex; flex-direction: column; padding: 2.2rem;
+        backface-visibility: hidden; border: 1px solid #e2e8f0; text-align: left;
+    }}
+    .tm-ic-no {{ font-size: 0.65rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.1em; }}
+    .tm-ic-no span {{ color: #475569; }}
+    .tm-ic-motto {{ font-size: 1.1rem; font-weight: 600; color: #1e293b; line-height: 1.5; margin-top: auto; margin-bottom: auto; padding: 1rem 0; }}
+    .tm-ic-brand {{ font-size: 0.65rem; font-weight: 900; text-transform: uppercase; color: #cbd5e1; letter-spacing: 0.2em; }}
+
+    /* ── PAGES ── */
+    .tm-book-pages {{ 
+        position: absolute; inset: 4px 0 4px 10px; z-index: 5; background: #fff; border-radius: 2px 24px 24px 2px;
+        box-shadow: 2px 0 0 #f1f5f9, 4px 0 0 #e2e8f0, 10px 10px 40px rgba(0,0,0,0.04);
+    }}
+
+    /* ── INSIDE RIGHT ── */
+    .tm-book-content {{
+        position: absolute; inset: 0; z-index: 10; background: #fff; border: 1px solid #e2e8f0;
+        border-radius: 4px 28px 28px 4px; padding: 2.5rem 2rem; display: flex; flex-direction: column;
+        box-shadow: inset 10px 0 20px rgba(0,0,0,0.01);
+    }}
+    .tm-book-inner {{ width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; }}
+
+    /* Elements */
+    .tm-av {{ width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 2rem; font-weight: 800; margin-bottom: 1.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }}
+    .tm-av-s {{ width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; }}
+
+    .tm-name {{ font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-bottom: 0.2rem; }}
+    .tm-role {{ font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.2rem; }}
+    .tm-desc {{ font-size: 0.88rem; line-height: 1.6; color: #64748b; font-weight: 500; }}
+    
+    .tm-b-name {{ font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 0.6rem; }}
+    .tm-b-bio {{ font-size: 0.85rem; line-height: 1.8; color: #475569; margin-bottom: 1.5rem; font-weight: 500; }}
+
+    .tm-skills-box {{ width: 100%; margin-bottom: 1.5rem; }}
+    .tm-skills-list {{ display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }}
+    .tm-skill-tag {{ font-size: 0.68rem; font-weight: 700; padding: 0.3rem 0.6rem; background: #f1f5f9; color: #64748b; border-radius: 20px; transition: 0.2s; }}
+
+    .tm-b-footer {{ width: 100%; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 1rem; }}
+    .tm-b-socials {{ display: flex; gap: 0.5rem; }}
+    .tm-b-social {{ width: 36px; height: 36px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; transition: 0.2s; }}
+    .tm-b-social:hover {{ color: #1e293b; background: #f1f5f9; }}
+
+    .tm-b-contact {{ 
+        padding: 0.6rem 1.4rem; border-radius: 10px; color: #fff; font-size: 0.78rem; font-weight: 700; text-decoration: none; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: 0.2s; 
+    }}
+    .tm-b-contact:hover {{ transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }}
+
+    @media (max-width: 1200px) {{
+        .tm-grid {{ grid-template-columns: repeat(2, 1fr); max-width: 700px; gap: 3rem 2rem; }}
+    }}
+    @media (max-width: 650px) {{
+        .tm-grid {{ grid-template-columns: 1fr; }}
+        .tm-section {{ padding: 6rem 1.5rem; }}
+    }}
+</style>
+'''
+
+FOOTER = '''
+{% endblock %}
+'''
+
+with open(TEMPLATE, 'w', encoding='utf-8') as f:
+    f.write(HEADER)
+    f.write(TEAM_SECTION)
+    f.write(FOOTER)
+
+print('Success: Reconstructed about.html with Perfect Clean design.')

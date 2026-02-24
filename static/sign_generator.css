@@ -187,8 +187,8 @@
 
 /* Output Containers */
 .sign-output-container {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--glass-border);
+    background: transparent;
+    border: none;
     border-radius: var(--radius-md);
     padding: 2rem;
     margin-top: 2rem;
@@ -200,8 +200,8 @@
 }
 
 .word-container {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border: none;
     border-radius: var(--radius-sm);
     padding: 0.75rem;
     /* Reduced padding */

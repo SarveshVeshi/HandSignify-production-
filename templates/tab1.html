@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Tab 1 | HandSignify{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='sign_generator.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="generator-feature">
+    <div class="generator-card">
+        <div class="generator-header">
+            <h2>Sign → Text</h2>
+            <p>Convert sign language to text using your camera.</p>
+        </div>
+
+        <div id="signToTextPanel" class="tab-content active" style="display: block;">
+            <div class="feature-panel">
+                <h3>Real-Time Recognition</h3>
+                <p class="text-muted mb-4">Use your camera to detect sign language gestures and convert them to text.
+                </p>
+
+                <div class="controls mb-3">
+                    <button id="startCameraButton" class="btn-primary">Start Camera</button>
+                    <button id="closeCameraButton" class="btn-danger-custom hidden">Stop Camera</button>
+                </div>
+
+                <!-- Camera Feed Container -->
+                <div id="cameraFeedContainer" class="camera-feed-box hidden" style="margin: 0 auto; max-width: 640px;">
+                    <img id="cameraFeed" src="" alt="Camera Stream"
+                        style="width: 100%; border-radius: var(--radius-sm);">
+                </div>
+
+                <div class="info-box mt-4">
+                    <p class="mb-0"><strong>Tip:</strong> Ensure good lighting and position your hand clearly in the
+                        camera frame for best results.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const startCameraButton = document.getElementById('startCameraButton');
+    const closeCameraButton = document.getElementById('closeCameraButton');
+    const cameraFeed = document.getElementById('cameraFeed');
+    const cameraFeedContainer = document.getElementById('cameraFeedContainer');
+
+    startCameraButton.addEventListener('click', () => {
+        // Remove the hidden class so the container becomes visible
+        cameraFeedContainer.classList.remove('hidden');
+        cameraFeedContainer.style.display = 'flex'; // Ensure flex layout is applied
+
+        // Start the camera feed
+        cameraFeed.src = "{{ url_for('video_feed') }}";
+
+        // Show the "Close Camera" button
+        closeCameraButton.classList.remove('hidden');
+        closeCameraButton.style.display = 'inline-block';
+
+        // Hide the "Start Camera" button
+        startCameraButton.style.display = 'none';
+    });
+
+    closeCameraButton.addEventListener('click', () => {
+        // Hide the camera feed container
+        cameraFeedContainer.classList.add('hidden');
+        cameraFeedContainer.style.display = 'none';
+
+        // Stop the camera feed by clearing the src
+        cameraFeed.src = '';
+
+        // Hide the "Close Camera" button
+        closeCameraButton.classList.add('hidden');
+        closeCameraButton.style.display = 'none';
+
+        // Show the "Start Camera" button
+        startCameraButton.style.display = 'inline-block';
+    });
+</script>
+{% endblock %}

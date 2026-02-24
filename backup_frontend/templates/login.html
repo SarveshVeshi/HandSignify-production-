@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | HandSignify{% endblock %}
+
+{% block content %}
+<main class="auth-container">
+    <div class="auth-card">
+        <h1 class="text-center mb-4">Welcome Back</h1>
+
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                <label for="username" style="color: var(--text-muted); margin-bottom: 0.5rem;">Username</label>
+                {{ form.username(class="form-control", placeholder="Enter your username", style="background: rgba(0, 0,
+                0, 0.3); border: 1px solid var(--glass-border); color: #fff;") }}
+            </div>
+
+            <div class="mb-3">
+                <label for="email" style="color: var(--text-muted); margin-bottom: 0.5rem;">Email Address</label>
+                {{ form.email(class="form-control", placeholder="name@example.com", style="background: rgba(0, 0, 0,
+                0.3); border: 1px solid var(--glass-border); color: #fff;") }}
+            </div>
+
+            <div class="mb-4">
+                <label for="password" style="color: var(--text-muted); margin-bottom: 0.5rem;">Password</label>
+                {{ form.password(class="form-control", placeholder="Enter your password", style="background: rgba(0, 0,
+                0, 0.3); border: 1px solid var(--glass-border); color: #fff;") }}
+            </div>
+
+            <div class="d-grid">
+                {{ form.submit(class="btn-primary", style="width: 100%;") }}
+            </div>
+        </form>
+
+        <div class="divider">
+            <span>OR</span>
+        </div>
+
+        <div class="auth-links text-center">
+            <a href="{{ url_for('register') }}" class="btn-outline d-block mb-2 text-center"
+                style="padding: 0.5rem; border-radius: 0.5rem; text-decoration: none; width: 100%;">Create Account</a>
+            <a href="{{ url_for('reset_password_request') }}"
+                style="font-size: 0.9rem; color: var(--text-muted);">Forgot Password?</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

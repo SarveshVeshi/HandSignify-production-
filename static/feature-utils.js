@@ -35,13 +35,15 @@ function setupFeatureToggle(buttonSelector = '.tab-button', contentSelector = '.
 }
 
 /**
- * Converts text input to ASL images.
+ * Converts text input to sign images.
  * @param {string} text - Text to convert
  * @param {string} outputContainerId - ID of the container to append images to
+ * @param {string} language - 'asl' or 'isl'
  */
-function convertTextToSign(text, outputContainerId) {
+function convertTextToSign(text, outputContainerId, language = 'asl') {
     const words = text.toUpperCase().split(' ');
     const signOutput = document.getElementById(outputContainerId);
+    const langFolder = language.toLowerCase() === 'isl' ? 'isl-images' : 'asl-images';
 
     if (!signOutput) return;
 
@@ -61,8 +63,8 @@ function convertTextToSign(text, outputContainerId) {
             if (/[A-Z0-9]/.test(char)) {
                 const img = document.createElement('img');
                 img.className = 'letter-image';
-                img.src = `/static/asl-images/${char}.png`;
-                img.alt = `ASL sign for ${char}`;
+                img.src = `/static/${langFolder}/${char}.png`;
+                img.alt = `${language.toUpperCase()} sign for ${char}`;
                 img.title = char;
 
                 const calculatedDelay = (wordIndex * 0.1) + (i * 0.05);
@@ -87,7 +89,8 @@ function convertTextToSign(text, outputContainerId) {
     });
 
     if (signOutput.children.length > 0) {
-        signOutput.classList.remove('hidden');
+        signOutput.parentElement.classList.remove('hidden');
+        signOutput.parentElement.style.display = 'block';
         signOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }

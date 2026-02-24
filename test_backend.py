@@ -1,7 +1,7 @@
 import requests
 import sys
 
-BASE_URL = "http://127.0.0.1:5000"
+BASE_URL = "http://127.0.0.1:5001"
 
 def test_endpoint(name, url, method="GET", json_data=None, expected_status=200):
     print(f"Testing {name} ({method} {url})...", end=" ")

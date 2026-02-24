@@ -1,12 +1,12 @@
 /**
  * realtime-interaction.js
  * Handles WebSocket connections and Speech Synthesis for HandSignify.
- * Dependencies: Socket.IO client
+ * Adapted for the new premium UI with Socket.IO.
  */
 
 let socket = null;
 let accumulatedText = "";
-let isAutoSpeakEnabled = true;
+let isAutoSpeakEnabled = false;
 
 /**
  * Initializes WebSocket connection.
@@ -41,24 +41,59 @@ function initWebSocket(callbacks = {}) {
 
     // Live Unstable prediction
     socket.on('prediction', (data) => {
+        const char = data.character;
+
+        // Update Prediction Bubble (Tab 1)
+        const bubble = document.getElementById('predictionBubble');
+        if (bubble) bubble.innerText = char;
+
+        // Update Live Display (Tab 4)
+        const displayVoice = document.getElementById('predictionDisplayVoice');
+        if (displayVoice) displayVoice.innerText = char;
+
         if (callbacks.onPrediction) {
-            callbacks.onPrediction(data.character);
+            callbacks.onPrediction(char);
         }
     });
 
     // Stable prediction (for accumulation)
     socket.on('stable_prediction', (data) => {
-        console.log('✅ Stable prediction:', data.character);
+        const char = data.character;
+        console.log('✅ Stable prediction:', char);
 
-        accumulatedText += data.character + " ";
+        accumulatedText += char + " ";
+
+        // Update Prediction Output (Tab 1)
+        const output = document.getElementById('predictionOutput');
+        if (output) {
+            output.innerText = accumulatedText;
+        }
 
         if (callbacks.onStablePrediction) {
-            callbacks.onStablePrediction(data.character, accumulatedText);
+            callbacks.onStablePrediction(char, accumulatedText);
         }
 
         // Auto-speak logic
         if (isAutoSpeakEnabled && window.speechSynthesis) {
-            speakText(data.character);
+            speakText(char);
+        }
+
+        // Request refinement from backend if in Tab 3 (Voice/Refinement context)
+        // or just generally if needed.
+        if (socket && socket.connected) {
+            socket.emit('refine_text', { 'text': accumulatedText });
+        }
+    });
+
+    socket.on('refined_text_update', (data) => {
+        // Update Refined Text area (Tab 3)
+        const refinedBox = document.getElementById('refinedTextBox');
+        if (refinedBox) {
+            refinedBox.value = data.refined_text;
+        }
+
+        if (callbacks.onRefinedText) {
+            callbacks.onRefinedText(data.refined_text);
         }
     });
 
@@ -101,21 +136,32 @@ function speakText(text, settings = {}) {
     window.speechSynthesis.speak(utterance);
 }
 
+/**
+ * Stops any ongoing or queued speech.
+ */
+function stopSpeaking() {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+}
+
 function clearAccumulatedText() {
     accumulatedText = "";
+    const output = document.getElementById('predictionOutput');
+    if (output) output.innerText = "";
+
+    const bubble = document.getElementById('predictionBubble');
+    if (bubble) bubble.innerText = "";
+
+    const displayVoice = document.getElementById('predictionDisplayVoice');
+    if (displayVoice) displayVoice.innerText = "—";
 }
 
 function getAccumulatedText() {
     return accumulatedText;
 }
 
-// Export for module usage (if needed)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        initWebSocket,
-        disconnectWebSocket,
-        speakText,
-        clearAccumulatedText,
-        getAccumulatedText
-    };
-}
+// Global initialization on load
+document.addEventListener('DOMContentLoaded', () => {
+    initWebSocket();
+});

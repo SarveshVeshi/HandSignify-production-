@@ -17,7 +17,6 @@
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
         initializeElements();
-        setupTabSwitching();
         checkBrowserCompatibility();
 
         if (SpeechRecognition) {
@@ -36,22 +35,40 @@
         browserWarning = document.getElementById('browserWarning');
         voiceErrorMessage = document.getElementById('voiceErrorMessage');
         voiceSignOutput = document.getElementById('voiceSignOutput');
-    }
 
-    function setupTabSwitching() {
-        const tabButtons = document.querySelectorAll('.tab-button');
+        // New button elements
+        const startSpeechBtn = document.getElementById('startSpeechBtn');
+        const stopSpeechBtn = document.getElementById('stopSpeechBtn');
+        const clearVoiceSignTextBtn = document.getElementById('clearVoiceSignTextBtn');
+        const refinedTextBox = document.getElementById('refinedTextBox');
 
-        tabButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const targetTab = this.getAttribute('data-tab');
-                switchTab(targetTab);
-
-                // Update active state on buttons
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
+        // Add event listeners for new buttons
+        if (startSpeechBtn) {
+            startSpeechBtn.addEventListener('click', function () {
+                synthesizeSpeech(refinedTextBox.value || transcriptDisplay.textContent);
             });
-        });
+        }
+
+        if (stopSpeechBtn) {
+            stopSpeechBtn.addEventListener('click', function () {
+                window.speechSynthesis.cancel();
+                if (startSpeechBtn) startSpeechBtn.style.display = 'inline-flex';
+                stopSpeechBtn.style.display = 'none';
+            });
+        }
+
+        if (clearVoiceSignTextBtn) {
+            clearVoiceSignTextBtn.addEventListener('click', function () {
+                if (refinedTextBox) refinedTextBox.value = '';
+                if (transcriptDisplay) transcriptDisplay.textContent = '';
+                if (voiceSignOutput) {
+                    voiceSignOutput.innerHTML = '';
+                    voiceSignOutput.classList.add('hidden');
+                }
+            });
+        }
     }
+
 
     function switchTab(targetTabId) {
         // Hide all tabs
@@ -92,10 +109,13 @@
         recognition.onstart = function () {
             isListening = true;
             microphoneButton.classList.add('mic-active');
-            listeningIndicator.classList.remove('hidden');
-            startBtn.classList.add('hidden');
-            stopBtn.classList.remove('hidden');
-            voiceErrorMessage.classList.add('hidden');
+            if (listeningIndicator) {
+                listeningIndicator.classList.remove('hidden');
+                listeningIndicator.style.display = 'block';
+            }
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn) stopBtn.style.display = 'inline-block';
+            if (voiceErrorMessage) voiceErrorMessage.style.display = 'none';
         };
 
         recognition.onresult = function (event) {
@@ -125,9 +145,9 @@
         try {
             // Clear previous results
             voiceSignOutput.innerHTML = '';
-            voiceSignOutput.classList.add('hidden');
-            transcriptSection.classList.add('hidden');
-            voiceErrorMessage.classList.add('hidden');
+            voiceSignOutput.style.display = 'none';
+            transcriptSection.style.display = 'none';
+            voiceErrorMessage.style.display = 'none';
 
             recognition.start();
         } catch (error) {
@@ -143,9 +163,9 @@
         // Reset UI
         isListening = false;
         microphoneButton.classList.remove('mic-active');
-        listeningIndicator.classList.add('hidden');
-        startBtn.classList.remove('hidden');
-        stopBtn.classList.add('hidden');
+        if (listeningIndicator) listeningIndicator.style.display = 'none';
+        if (startBtn) startBtn.style.display = 'inline-block';
+        if (stopBtn) stopBtn.style.display = 'none';
     }
 
     function handleTranscript(transcript) {
@@ -154,7 +174,7 @@
 
         // Display transcript
         transcriptDisplay.textContent = cleanedText;
-        transcriptSection.classList.remove('hidden');
+        transcriptSection.style.display = 'block';
 
         // Check if there's any valid content
         if (!cleanedText.trim() || !/[A-Z0-9]/.test(cleanedText)) {
@@ -162,51 +182,12 @@
             return;
         }
 
-        // Convert text to sign images - use the same logic as convertTextToSign but target voiceSignOutput
-        const words = cleanedText.split(' ');
-        voiceSignOutput.innerHTML = ''; // Clear previous output
-
-        // Process each word
-        words.forEach((word, wordIndex) => {
-            if (!word.trim()) return;
-
-            const wordContainer = document.createElement('div');
-            wordContainer.className = 'word-container';
-
-            for (let i = 0; i < word.length; i++) {
-                const char = word[i];
-
-                if (/[A-Z0-9]/.test(char)) {
-                    const img = document.createElement('img');
-                    img.className = 'letter-image';
-                    img.src = `/static/asl-images/${char}.png`;
-                    img.alt = `ASL sign for ${char}`;
-                    img.title = char;
-
-                    const calculatedDelay = (wordIndex * 0.1) + (i * 0.05);
-                    img.style.animationDelay = `${Math.min(calculatedDelay, 1.5)}s`;
-
-                    img.onerror = function () {
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'letter-image missing';
-                        placeholder.textContent = char;
-                        placeholder.title = char;
-                        placeholder.style.animationDelay = this.style.animationDelay;
-                        this.parentNode.replaceChild(placeholder, this);
-                    };
-
-                    wordContainer.appendChild(img);
-                }
-            }
-
-            if (wordContainer.children.length > 0) {
-                voiceSignOutput.appendChild(wordContainer);
-            }
-        });
+        // Convert text to sign images
+        convertTextToSign(cleanedText, 'voiceSignOutput', 'asl'); // Defaulting to ASL as no selector in Tab 3 currently
 
         // Show output container if there's content
         if (voiceSignOutput.children.length > 0) {
-            voiceSignOutput.classList.remove('hidden');
+            voiceSignOutput.style.display = 'flex'; // Use flex for word containers
             voiceSignOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
@@ -244,6 +225,45 @@
         setTimeout(function () {
             voiceErrorMessage.classList.add('hidden');
         }, 5000);
+    }
+
+    function synthesizeSpeech(text) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+
+        if (!text || text.trim() === '') {
+            showError('No text to speak. Please provide some text first.');
+            return;
+        }
+
+        // Create utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        // Update buttons
+        const startSpeechBtn = document.getElementById('startSpeechBtn');
+        const stopSpeechBtn = document.getElementById('stopSpeechBtn');
+
+        utterance.onstart = function () {
+            if (startSpeechBtn) startSpeechBtn.style.display = 'none';
+            if (stopSpeechBtn) stopSpeechBtn.style.display = 'inline-flex';
+        };
+
+        utterance.onend = function () {
+            if (startSpeechBtn) startSpeechBtn.style.display = 'inline-flex';
+            if (stopSpeechBtn) stopSpeechBtn.style.display = 'none';
+        };
+
+        utterance.onerror = function (event) {
+            showError('Speech synthesis error: ' + event.error);
+            if (startSpeechBtn) startSpeechBtn.style.display = 'inline-flex';
+            if (stopSpeechBtn) stopSpeechBtn.style.display = 'none';
+        };
+
+        // Start speech synthesis
+        window.speechSynthesis.speak(utterance);
     }
 
 })();

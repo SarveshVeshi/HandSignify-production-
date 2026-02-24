@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}HandSignify | AI Sign Language Detection{% endblock %}
+
+{% block content %}
+<!-- Full Screen Background Video -->
+<div class="video-container">
+    <video autoplay muted loop playsinline id="bgVideo" onerror="this.style.display='none'">
+        {% if video_data %}
+        <source src="{{ video_data.url }}?v={{ video_data.timestamp }}" type="video/mp4">
+        {% else %}
+        <!-- Fallback if no video found by backend -->
+        <source src="{{ url_for('static', filename='videos/background.mp4') }}" type="video/mp4">
+        {% endif %}
+        Your browser does not support HTML5 video.
+    </video>
+    <div class="video-overlay"></div>
+</div>
+
+<!-- Hero Section -->
+<div class="hero-content-wrapper" style="position: relative; z-index: 2;">
+    <!-- Animated Background Gradient (Optional/Fallback) -->
+    <div class="floating-blobs-container"></div>
+
+    <header class="main-container hero-content"
+        style="flex-direction: column; padding: 4rem 2rem; position: relative; z-index: 2;">
+        <div class="glass-hero" style="max-width: 700px;">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem; color: var(--text-main);">Breaking Barriers with AI</h1>
+            <p style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 2.5rem;">
+                Real-time Sign Language Detection powered by advanced computer vision.
+                Bridge the communication gap instantly.
+            </p>
+
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{{ url_for('tab_1') }}" class="btn-primary">Try Sign Converter</a>
+            </div>
+        </div>
+    </header>
+</div>
+
+<!-- Features Section -->
+<section class="container py-5">
+    <h2 class="text-center mb-5" style="color: var(--text-main); font-size: 2.5rem;">Our Features</h2>
+    <div class="row g-4">
+        <!-- Sign → Text Feature -->
+        <div class="col-md-6">
+            <div class="card h-100 p-4">
+                <h3 class="d-flex align-items-center mb-3" style="color: var(--primary);">
+                    <i data-lucide="monitor"
+                        style="width: 32px; height: 32px; vertical-align: middle; margin-right: 0.5rem;"></i>
+                    Sign → Text
+                </h3>
+                <p style="color: var(--text-muted);">Real-time camera-based sign language recognition converting hand
+                    gestures into readable text using advanced ML models.</p>
+            </div>
+        </div>
+
+        <!-- Text → Sign Feature -->
+        <div class="col-md-6">
+            <div class="card h-100 p-4">
+                <h3 class="d-flex align-items-center mb-3" style="color: var(--primary);">
+                    <i data-lucide="message-square"
+                        style="width: 32px; height: 32px; vertical-align: middle; margin-right: 0.5rem;"></i>
+                    Text → Sign
+                </h3>
+                <p style="color: var(--text-muted);">Convert any text into sign language alphabet images for learning
+                    and communication assistance.</p>
+            </div>
+        </div>
+
+        <!-- Sign -> Voice Feature -->
+        <div class="col-md-6">
+            <div class="card h-100 p-4">
+                <h3 class="d-flex align-items-center mb-3" style="color: var(--primary);">
+                    <i data-lucide="volume-2"
+                        style="width: 32px; height: 32px; vertical-align: middle; margin-right: 0.5rem;"></i>
+                    Real-time Recognition
+                </h3>
+                <p style="color: var(--text-muted);">Use your camera to interpret hand signs instantly.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
