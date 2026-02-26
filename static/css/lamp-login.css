@@ -1,0 +1,772 @@
+/* ============================================================
+   HandSignify — Cinematic Lamp Login
+   Premium Interactive Authentication Experience
+   ============================================================ */
+
+/* ─── LAMP LOGIN: DESIGN TOKENS ─────────────────────────────── */
+:root {
+    --lamp-bg: #0B1120;
+    --lamp-bg-teal: #0D2030;
+    --lamp-green-shade: #4A6B52;
+    --lamp-green-lit: #5C8B65;
+    --lamp-glow-warm: rgba(255, 220, 150, 0.6);
+    --lamp-neon: #00FF96;
+    --lamp-neon-soft: rgba(0, 255, 150, 0.4);
+    --lamp-neon-glow: rgba(0, 255, 150, 0.15);
+    --lamp-card-bg: rgba(10, 22, 38, 0.82);
+    --lamp-card-border: rgba(0, 255, 150, 0.3);
+    --lamp-input-bg: rgba(20, 35, 55, 0.8);
+    --lamp-input-border: rgba(80, 100, 130, 0.4);
+    --lamp-btn-green: #2EAA5E;
+    --lamp-btn-green-hover: #35C46B;
+    --lamp-text-white: #ffffff;
+    --lamp-text-soft: rgba(255, 255, 255, 0.55);
+    --lamp-text-faint: rgba(255, 255, 255, 0.35);
+    --lamp-ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
+    --lamp-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── FULL-SCREEN OVERRIDE ──────────────────────────────────── */
+body.lamp-login-body {
+    background: var(--lamp-bg) !important;
+    background-image: radial-gradient(ellipse 80% 60% at 20% 50%, rgba(13, 32, 48, 0.8) 0%, transparent 70%) !important;
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+body.lamp-login-body .hs-noise-layer,
+body.lamp-login-body .hs-orb,
+body.lamp-login-body .cursor-glow {
+    display: none !important;
+}
+
+body.lamp-login-body .app-shell {
+    padding-inline: 0;
+}
+
+body.lamp-login-body .navbar {
+    display: none !important;
+}
+
+body.lamp-login-body footer {
+    display: none !important;
+}
+
+/* ─── BACK BUTTON ───────────────────────────────────────────── */
+.lamp-back-btn {
+    position: fixed;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: rgba(255, 255, 255, 0.55);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+.lamp-back-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--lamp-text-white);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.lamp-back-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* ─── SCENE CONTAINER ───────────────────────────────────────── */
+.lamp-scene {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+/* Vignette */
+.lamp-scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Subtle top decorative shapes */
+.lamp-scene::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background:
+        radial-gradient(circle 100px at 15% 0%, rgba(20, 30, 50, 0.8) 0%, transparent 100%),
+        radial-gradient(circle 120px at 50% 0%, rgba(20, 30, 50, 0.6) 0%, transparent 100%),
+        radial-gradient(circle 100px at 85% 0%, rgba(20, 30, 50, 0.8) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ─── LAYOUT: LAMP + CARD ───────────────────────────────────── */
+.lamp-layout {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2rem, 6vw, 6rem);
+    width: 100%;
+    max-width: 940px;
+    padding-inline: 2.5rem;
+}
+
+/* ─── LAMP CHARACTER ────────────────────────────────────────── */
+.lamp-character {
+    position: relative;
+    flex-shrink: 0;
+    width: 260px;
+    height: 380px;
+    cursor: default;
+    will-change: transform;
+}
+
+/* Breathing animation */
+.lamp-character svg {
+    width: 100%;
+    height: 100%;
+}
+
+.lamp-breathing {
+    animation: lampBreathe 4s ease-in-out infinite;
+}
+
+@keyframes lampBreathe {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-4px) scale(1.008);
+    }
+}
+
+/* ─── LAMP SVG PARTS ────────────────────────────────────────── */
+/* Shade */
+.lamp-shade {
+    transition: fill 400ms var(--lamp-ease-cinematic);
+}
+
+.lamp-shade--off {
+    fill: #3A4A48;
+}
+
+.lamp-shade--on {
+    fill: var(--lamp-green-lit);
+}
+
+/* Eyes */
+.lamp-eyes-sleepy,
+.lamp-eyes-happy {
+    transition: opacity 250ms ease-out;
+}
+
+.lamp-state-off .lamp-eyes-sleepy {
+    opacity: 1;
+}
+
+.lamp-state-off .lamp-eyes-happy {
+    opacity: 0;
+}
+
+.lamp-state-on .lamp-eyes-sleepy {
+    opacity: 0;
+}
+
+.lamp-state-on .lamp-eyes-happy {
+    opacity: 1;
+}
+
+/* Mouth (tongue) */
+.lamp-mouth {
+    opacity: 0;
+    transition: opacity 300ms ease-out 100ms;
+}
+
+.lamp-state-on .lamp-mouth {
+    opacity: 1;
+}
+
+/* Glow under shade */
+.lamp-underglow {
+    opacity: 0;
+    transition: opacity 400ms var(--lamp-ease-cinematic);
+}
+
+.lamp-state-on .lamp-underglow {
+    opacity: 1;
+}
+
+/* Radial background glow */
+.lamp-radial-glow {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 220, 150, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 500ms var(--lamp-ease-cinematic);
+    z-index: -1;
+}
+
+.lamp-state-on .lamp-radial-glow {
+    opacity: 1;
+}
+
+/* Surface light spill */
+.lamp-light-spill {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 40px;
+    background: radial-gradient(ellipse, rgba(255, 220, 150, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 400ms var(--lamp-ease-cinematic);
+}
+
+.lamp-state-on .lamp-light-spill {
+    opacity: 1;
+}
+
+/* ─── PULL STRING ───────────────────────────────────────────── */
+.lamp-pull-string {
+    position: absolute;
+    left: 28%;
+    top: 48%;
+    cursor: pointer;
+    z-index: 10;
+    will-change: transform;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.lamp-pull-string:focus {
+    outline: none;
+}
+
+.lamp-pull-string:focus-visible {
+    outline: 2px solid var(--lamp-neon);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+.pull-string-line {
+    stroke: rgba(200, 210, 220, 0.7);
+    stroke-width: 2;
+    fill: none;
+    transition: d 200ms var(--lamp-ease-spring);
+}
+
+.pull-string-bead {
+    fill: rgba(200, 210, 220, 0.85);
+    transition: transform 200ms var(--lamp-ease-spring);
+}
+
+.lamp-pull-string:hover .pull-string-bead {
+    transform: translateY(3px);
+}
+
+.lamp-pull-string:active .pull-string-bead {
+    transform: translateY(8px);
+}
+
+/* String physics swing */
+.string-swing {
+    animation: stringSwing 3s ease-in-out infinite;
+    transform-origin: top center;
+}
+
+@keyframes stringSwing {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(2deg);
+    }
+
+    75% {
+        transform: rotate(-2deg);
+    }
+}
+
+/* ─── PULL HINT TEXT ─────────────────────────────────────────── */
+.lamp-pull-hint {
+    position: absolute;
+    left: 2%;
+    top: 72%;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: opacity 400ms ease;
+    animation: hintPulse 2.5s ease-in-out infinite;
+}
+
+.lamp-pull-hint-arrow {
+    display: inline-block;
+    animation: hintBounce 1.5s ease-in-out infinite;
+    font-size: 0.9rem;
+}
+
+@keyframes hintPulse {
+
+    0%,
+    100% {
+        opacity: 0.45;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+@keyframes hintBounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(4px);
+    }
+}
+
+/* Hide hint when lamp is ON */
+.lamp-state-on~.lamp-pull-hint {
+    opacity: 0 !important;
+    animation: none;
+}
+
+/* ─── LOGIN CARD ──────────────────────────────────────────────── */
+.lamp-login-card {
+    position: relative;
+    width: 340px;
+    flex-shrink: 0;
+    padding: 1.75rem 1.75rem;
+    border-radius: 20px;
+    background: var(--lamp-card-bg);
+    border: 1px solid var(--lamp-card-border);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    box-shadow:
+        0 0 40px rgba(0, 255, 150, 0.08),
+        0 0 80px rgba(0, 255, 150, 0.03),
+        0 24px 64px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+    /* Animation initial state */
+    opacity: 0;
+    transform: translateX(60px);
+    visibility: hidden;
+    transition:
+        opacity 600ms var(--lamp-ease-cinematic),
+        transform 600ms var(--lamp-ease-cinematic),
+        visibility 0ms linear 600ms;
+    will-change: transform, opacity;
+}
+
+.lamp-login-card.card-visible {
+    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
+    transition:
+        opacity 600ms var(--lamp-ease-cinematic),
+        transform 600ms var(--lamp-ease-cinematic),
+        visibility 0ms linear 0ms;
+}
+
+/* Neon border glow effect */
+.lamp-login-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 21px;
+    background: linear-gradient(135deg, rgba(0, 255, 150, 0.3), rgba(0, 255, 150, 0.05), rgba(0, 255, 150, 0.2));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 400ms var(--lamp-ease-cinematic) 200ms;
+}
+
+.lamp-login-card.card-visible::before {
+    opacity: 1;
+}
+
+/* Card title */
+.lamp-card-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--lamp-text-white);
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.02em;
+}
+
+/* Form group */
+.lamp-form-group {
+    margin-bottom: 0.85rem;
+}
+
+.lamp-form-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.lamp-form-input {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--lamp-text-white);
+    background: var(--lamp-input-bg);
+    border: 1px solid var(--lamp-input-border);
+    border-radius: 8px;
+    outline: none;
+    transition:
+        border-color 300ms ease,
+        box-shadow 300ms ease,
+        background 300ms ease;
+}
+
+.lamp-form-input::placeholder {
+    color: var(--lamp-text-faint);
+}
+
+.lamp-form-input:focus {
+    border-color: var(--lamp-neon-soft);
+    box-shadow: 0 0 12px var(--lamp-neon-glow), 0 0 4px rgba(0, 255, 150, 0.1) inset;
+    background: rgba(20, 40, 60, 0.9);
+}
+
+/* Login button */
+.lamp-btn-login {
+    width: 100%;
+    padding: 0.65rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    color: var(--lamp-text-white);
+    background: var(--lamp-btn-green);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition:
+        background 200ms ease,
+        transform 150ms ease,
+        box-shadow 300ms ease;
+    box-shadow: 0 4px 16px rgba(46, 170, 94, 0.3);
+    margin-top: 0.5rem;
+}
+
+.lamp-btn-login:hover {
+    background: var(--lamp-btn-green-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(46, 170, 94, 0.4);
+}
+
+.lamp-btn-login:active {
+    transform: translateY(0);
+}
+
+/* Forgot password */
+.lamp-forgot-link {
+    display: block;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--lamp-text-soft);
+    text-decoration: none;
+    margin-top: 1rem;
+    transition: color 200ms ease;
+}
+
+.lamp-forgot-link:hover {
+    color: var(--lamp-neon);
+}
+
+/* Divider */
+.lamp-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    color: var(--lamp-text-faint);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.lamp-divider::before,
+.lamp-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Social login buttons */
+.lamp-social-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.lamp-social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(20, 35, 55, 0.6);
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.lamp-social-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: var(--lamp-neon-soft);
+    background: rgba(20, 35, 55, 0.8);
+}
+
+.lamp-social-btn:active {
+    transform: translateY(0);
+}
+
+.lamp-social-btn svg {
+    filter: brightness(1.2);
+}
+
+/* Register link */
+.lamp-register-link {
+    display: block;
+    width: 100%;
+    padding: 0.72rem;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--lamp-text-soft);
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    transition: border-color 200ms ease, color 200ms ease, background 200ms ease;
+}
+
+.lamp-register-link:hover {
+    border-color: var(--lamp-neon-soft);
+    color: var(--lamp-neon);
+    background: rgba(0, 255, 150, 0.04);
+}
+
+/* ─── PARTICLES ─────────────────────────────────────────────── */
+.lamp-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.lamp-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    animation: particleFloat linear infinite;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-100vh) translateX(30px);
+        opacity: 0;
+    }
+}
+
+/* ─── RESPONSIVE ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .lamp-layout {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding-inline: 1.25rem;
+    }
+
+    .lamp-scene {
+        height: auto;
+        min-height: calc(100vh - 100px);
+        padding-block: 1.5rem;
+    }
+
+    .lamp-character {
+        width: 180px;
+        height: 260px;
+    }
+
+    .lamp-login-card {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .lamp-login-card.card-visible {
+        transform: translateY(0);
+    }
+
+    .lamp-login-card {
+        transform: translateY(40px);
+    }
+}
+
+@media (max-width: 480px) {
+    .lamp-character {
+        width: 150px;
+        height: 220px;
+    }
+
+    .lamp-login-card {
+        padding: 2rem 1.5rem;
+    }
+}
+
+/* ─── REDUCED MOTION ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .lamp-breathing {
+        animation: none;
+    }
+
+    .string-swing {
+        animation: none;
+    }
+
+    .lamp-particle {
+        animation: none;
+        display: none;
+    }
+
+    .lamp-login-card {
+        transition:
+            opacity 300ms ease,
+            visibility 0ms linear 300ms;
+        transform: none !important;
+    }
+
+    .lamp-login-card.card-visible {
+        transition:
+            opacity 300ms ease,
+            visibility 0ms linear 0ms;
+    }
+
+    .lamp-shade,
+    .lamp-underglow,
+    .lamp-radial-glow,
+    .lamp-light-spill,
+    .lamp-eyes-sleepy,
+    .lamp-eyes-happy,
+    .lamp-mouth {
+        transition-duration: 150ms;
+    }
+}
+
+/* ─── FLASH MESSAGES OVERRIDE ───────────────────────────────── */
+body.lamp-login-body div[role="alert"] {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    width: auto;
+    max-width: 400px;
+    margin: 0 !important;
+}
+
+body.lamp-login-body .alert {
+    background: rgba(15, 25, 40, 0.85) !important;
+    border: 1px solid var(--lamp-card-border) !important;
+    color: var(--lamp-text-white) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+body.lamp-login-body .alert-danger {
+    border-color: rgba(244, 63, 94, 0.4) !important;
+}
+
+body.lamp-login-body .alert-success {
+    border-color: var(--lamp-neon-soft) !important;
+}

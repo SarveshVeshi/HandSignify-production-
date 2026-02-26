@@ -63,7 +63,7 @@
                                 href="{{ url_for('about') }}">About</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'sign_text_converter' %}active{% endif %}"
+                            <a class="nav-link {% if request.endpoint in ['sign_text_converter', 'tab_1', 'tab_2', 'tab_3', 'tab_4'] %}active{% endif %}"
                                 href="{{ url_for('sign_text_converter') }}">Sign Converter</a>
                         </li>
                         <li class="nav-item">
@@ -96,9 +96,6 @@
                             </ul>
                         </li>
                         {% else %}
-                        <li class="nav-item">
-                            <a href="{{ url_for('login') }}" class="btn-outline" style="font-size:0.875rem;">Sign In</a>
-                        </li>
                         <li class="nav-item">
                             <a href="{{ url_for('register') }}" class="btn-pill-dot">
                                 <span class="btn-arrow">&rarr;</span>

@@ -15,6 +15,7 @@ from flask_bcrypt import Bcrypt
 from datetime import datetime
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from flask_mail import Message, Mail
+import os
 import random
 import re
 import pickle
@@ -24,6 +25,13 @@ from mediapipe import solutions as mp_solutions
 import numpy as np
 from services.sign_service import sign_service
 
+from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.contrib.github import make_github_blueprint, github
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
 app = Flask(__name__)
 
 CORS(app)  # Allow cross-origin requests for all routes
@@ -32,8 +40,8 @@ CORS(app)  # Allow cross-origin requests for all routes
 bcrypt = Bcrypt(app)
 
 # -------------------Database Model Setup-------------------
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SECRET_KEY'] = 'thisisasecretkey'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'thisisasecretkey')
 serializer = Serializer(app.config['SECRET_KEY'])
 db = SQLAlchemy(app)
 app.app_context().push()
@@ -47,13 +55,34 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # -------------------mail configuration-------------------
-app.config["MAIL_SERVER"] = 'smtp.gmail.com'
-app.config["MAIL_PORT"] = 587
-app.config["MAIL_USERNAME"] = 'handssignify@gmail.com'
-app.config["MAIL_PASSWORD"] = 'ttbylakctxvvvnxe'
-app.config["MAIL_USE_TLS"] = True
-app.config["MAIL_USE_SSL"] = False
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", 'smtp.gmail.com')
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", 'handssignify@gmail.com')
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", 'ttbylakctxvvvnxe')
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", 'True') == 'True'
+app.config["MAIL_USE_SSL"] = os.environ.get("MAIL_USE_SSL", 'False') == 'True'
 mail = Mail(app)
+
+# -------------------OAuth Configuration-------------------
+# Set environment variable to allow HTTP for local development
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+# Google OAuth
+google_bp = make_google_blueprint(
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    scope=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
+    redirect_url='/oauth/google/callback'
+)
+app.register_blueprint(google_bp, url_prefix='/login')
+
+# GitHub OAuth
+github_bp = make_github_blueprint(
+    client_id=os.environ.get('GITHUB_CLIENT_ID'),
+    client_secret=os.environ.get('GITHUB_CLIENT_SECRET'),
+    redirect_url='/oauth/github/callback'
+)
+app.register_blueprint(github_bp, url_prefix='/login')
 # --------------------------------------------------------
 
 
@@ -68,7 +97,9 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(30), nullable=False, unique=True)
     email = db.Column(db.String(30), nullable=False)
-    password = db.Column(db.String(80), nullable=False)
+    password = db.Column(db.String(80), nullable=True)  # Nullable for OAuth users
+    oauth_provider = db.Column(db.String(20), nullable=True)  # 'google', 'github', 'facebook'
+    oauth_id = db.Column(db.String(100), nullable=True, unique=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 # ----------------------------------------------------
 
@@ -79,6 +110,75 @@ def home():
     session.clear()
     return render_template('home.html')
 # ----------------------------------------------------
+
+# -------------------OAuth Callback Routes-------------------
+
+@app.route('/oauth/google/callback')
+def google_callback():
+    if not google.authorized:
+        flash('Google login failed.', 'danger')
+        return redirect(url_for('login'))
+    resp = google.get('/oauth2/v2/userinfo')
+    if not resp.ok:
+        flash('Failed to fetch Google user info.', 'danger')
+        return redirect(url_for('login'))
+    info = resp.json()
+    oauth_id = 'google_' + str(info.get('id', ''))
+    email = info.get('email', '')
+    name = info.get('name', email.split('@')[0])
+    return _oauth_login_or_register(oauth_id, 'google', name, email)
+
+
+@app.route('/oauth/github/callback')
+def github_callback():
+    if not github.authorized:
+        flash('GitHub login failed.', 'danger')
+        return redirect(url_for('login'))
+    resp = github.get('/user')
+    if not resp.ok:
+        flash('Failed to fetch GitHub user info.', 'danger')
+        return redirect(url_for('login'))
+    info = resp.json()
+    oauth_id = 'github_' + str(info.get('id', ''))
+    name = info.get('login', 'github_user')
+    email = info.get('email', '') or f"{name}@github.oauth"
+    return _oauth_login_or_register(oauth_id, 'github', name, email)
+
+
+def _oauth_login_or_register(oauth_id, provider, username, email):
+    """Find or create a user from OAuth and log them in."""
+    user = User.query.filter_by(oauth_id=oauth_id).first()
+    if user:
+        # Existing OAuth user — log them in
+        login_user(user)
+        session['name'] = user.username
+        session['logged_in'] = True
+        flash(f'Welcome back, {user.username}!', 'success')
+        return redirect(url_for('tab_1'))
+    else:
+        # New OAuth user — create account
+        # Ensure unique username
+        base_username = username[:25]
+        final_username = base_username
+        counter = 1
+        while User.query.filter_by(username=final_username).first():
+            final_username = f"{base_username}_{counter}"
+            counter += 1
+        new_user = User(
+            username=final_username,
+            email=email[:30],
+            password=bcrypt.generate_password_hash(os.urandom(24).hex()).decode('utf-8'),
+            oauth_provider=provider,
+            oauth_id=oauth_id
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        login_user(new_user)
+        session['name'] = new_user.username
+        session['logged_in'] = True
+        flash(f'Account created via {provider.title()}! Welcome, {new_user.username}!', 'success')
+        return redirect(url_for('tab_1'))
+# --------------------------------------------------------
 
 # -------------------feed back Page-----------------------
 @app.route('/feed', methods=['GET', 'POST'])
@@ -152,7 +252,6 @@ def voice_converter():
 
 # --------------------Login Page-------------------
 class LoginForm(FlaskForm):
-    username = StringField(label='username', validators=[InputRequired()], render_kw={"placeholder": "Username"})
     email = StringField(label='email', validators=[InputRequired(), Email()], render_kw={"placeholder": "Email"})
     password = PasswordField(label='password', validators=[InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
     submit = SubmitField('Login')
@@ -165,16 +264,15 @@ def login():
     if 'registered' in session and session['registered']:
         session.pop('registered', None)
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data) and User.query.filter_by(email=form.email.data).first():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.password and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
             flash('Login successfully.', category='success')
-            name = form.username.data
-            session['name'] = name
+            session['name'] = user.username
             session['logged_in'] = True
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('tab_1'))
         else:
-            flash(f'Login unsuccessful for {form.username.data}.', category='danger')
+            flash(f'Login unsuccessful for {form.email.data}. Check email and password.', category='danger')
     return render_template('login.html', form=form)
 # ----------------------------------------------------
 
@@ -224,14 +322,18 @@ def register():
     form = RegisterForm()
 
     if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data)
-        new_user = User(username=form.username.data,email=form.email.data, password=hashed_password)
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        new_user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        # Set a session variable to indicate successful registration
-        session['registered'] = True
-        flash(f'Account Created for {form.username.data} successfully.', category='success')
-        return redirect(url_for('login'))
+        
+        # Log the user in immediately
+        login_user(new_user)
+        session['name'] = new_user.username
+        session['logged_in'] = True
+        
+        flash(f'Account Created for {form.username.data} successfully! Welcome!', category='success')
+        return redirect(url_for('tab_1'))
 
     return render_template('register.html', form=form)
 # ----------------------------------------------------
