@@ -67,6 +67,14 @@
                 }
             });
         }
+
+        // Generate Signs from edited refined text
+        const generateSignsBtn = document.getElementById('generateSignsFromEditBtn');
+        if (generateSignsBtn) {
+            generateSignsBtn.addEventListener('click', function () {
+                generateSignsFromRefinedText();
+            });
+        }
     }
 
 
@@ -172,9 +180,15 @@
         // Clean the transcript: uppercase and keep only A-Z, 0-9, and spaces
         const cleanedText = transcript.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
 
-        // Display transcript
+        // Display raw transcript
         transcriptDisplay.textContent = cleanedText;
         transcriptSection.style.display = 'block';
+
+        // Populate the refined text box with the transcript so the user can edit it
+        const refinedTextBox = document.getElementById('refinedTextBox');
+        if (refinedTextBox) {
+            refinedTextBox.value = cleanedText;
+        }
 
         // Check if there's any valid content
         if (!cleanedText.trim() || !/[A-Z0-9]/.test(cleanedText)) {
@@ -183,11 +197,26 @@
         }
 
         // Convert text to sign images
-        convertTextToSign(cleanedText, 'voiceSignOutput', 'asl'); // Defaulting to ASL as no selector in Tab 3 currently
+        generateSignsFromRefinedText();
+    }
+
+    /**
+     * Generates sign images using the current refined text box content.
+     * This allows users to edit the text before generating signs.
+     */
+    function generateSignsFromRefinedText() {
+        const refinedTextBox = document.getElementById('refinedTextBox');
+        const textToConvert = refinedTextBox ? refinedTextBox.value.trim() : '';
+
+        if (!textToConvert) {
+            return;
+        }
+
+        convertTextToSign(textToConvert, 'voiceSignOutput', 'asl');
 
         // Show output container if there's content
-        if (voiceSignOutput.children.length > 0) {
-            voiceSignOutput.style.display = 'flex'; // Use flex for word containers
+        if (voiceSignOutput && voiceSignOutput.children.length > 0) {
+            voiceSignOutput.style.display = 'flex';
             voiceSignOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }

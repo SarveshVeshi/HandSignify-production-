@@ -1,153 +1,289 @@
 {% extends "base.html" %}
 
-{% block title %}HandSignify | AI Sign Language Detection{% endblock %}
+{% block title %}Dashboard | HandSignify{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-shell {
+        max-width: 1200px;
+        margin-inline: auto;
+        padding-top: 2rem;
+    }
+
+    .welcome-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .stat-val {
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        color: var(--hs-text-main);
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--hs-text-soft);
+        font-weight: 500;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .main-action-card {
+        padding: 2.5rem;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(59, 111, 239, 0.08), rgba(99, 102, 241, 0.05)) !important;
+        border-color: rgba(59, 111, 239, 0.2) !important;
+    }
+
+    .activity-card {
+        padding: 1.5rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-block: 0.75rem;
+        border-bottom: 1px solid var(--hs-border);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--hs-primary);
+    }
+
+    @media (max-width: 992px) {
+        .action-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
+<div class="dashboard-shell page-fade-in">
 
-<!-- ── Hero ──────────────────────────────────────────────────── -->
-<section class="hs-hero" data-animate="section">
-    <div class="hs-hero-grid">
+    <!-- ── Welcome Header ────────────────────────────────────────── -->
+    <header class="welcome-section">
+        <p class="hs-eyebrow">
+            <i data-lucide="layout" style="width:12px;height:12px;"></i>
+            User Dashboard
+        </p>
+        <h1 class="hs-hero-title" style="margin-bottom: 0.5rem;">Welcome back, <span>{% if current_user.is_authenticated
+                %}{{ current_user.username }}{% else %}Explorer{% endif %}</span>!</h1>
+        <p class="hs-hero-subtitle">Ready to continue your sign language journey? Here's your progress so far.</p>
+    </header>
 
-        <!-- Copy -->
-        <div class="hs-hero-copy">
-            <p class="hs-eyebrow">
-                <i data-lucide="sparkles" style="width:11px;height:11px;"></i>
-                AI Sign Language Studio
-            </p>
-            <h1 class="hs-hero-title">
-                Bring sign language into <span>every conversation.</span>
-            </h1>
-            <p class="hs-hero-subtitle">
-                HandSignify uses real-time computer vision and ML to translate ASL gestures
-                into text, speech, and interactive visuals — all in your browser.
-            </p>
-            <div class="hs-hero-cta">
-                <a href="{{ url_for('sign_text_converter') }}" class="btn-pill-white">
-                    Try Sign Converter
-                    <span class="btn-arrow-right">&rarr;</span>
-                </a>
-                <a href="{{ url_for('voice_converter') }}" class="btn-outline">
-                    Explore Voice & Signs
-                </a>
-                <span class="hs-hero-meta">✓ No installs &nbsp;·&nbsp; ✓ Works with any webcam</span>
+    <!-- ── Stats Grid ────────────────────────────────────────────── -->
+    <div class="stat-grid">
+        <div class="glass-card stat-card">
+            <div class="icon-box" style="background: rgba(59, 111, 239, 0.1); color: var(--hs-primary);">
+                <i data-lucide="award"></i>
+            </div>
+            <div>
+                <div class="stat-val">12</div>
+                <div class="stat-label">Signs Mastered</div>
             </div>
         </div>
 
-        <!-- Visual panels -->
-        <div class="hs-hero-visual">
-            <div class="hs-hero-panel hs-hero-panel--primary">
-                <h3>
-                    <i data-lucide="zap"
-                        style="width:14px;height:14px;color:var(--hs-primary);vertical-align:-2px;margin-right:5px;"></i>
-                    Real-time recognition
-                </h3>
-                <p>Camera frames stream into a MediaPipe + Random Forest pipeline,
-                    returning stable predictions in under a second.</p>
-                <ul>
-                    <li>ASL alphabet &amp; common phrases</li>
-                    <li>Stability window for noise reduction</li>
-                    <li>Built for live demos &amp; classrooms</li>
-                </ul>
+        <div class="glass-card stat-card">
+            <div class="icon-box" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                <i data-lucide="clock"></i>
             </div>
-            <div class="hs-hero-panel hs-hero-panel--secondary">
-                <h3>
-                    <i data-lucide="layers"
-                        style="width:14px;height:14px;color:var(--hs-indigo);vertical-align:-2px;margin-right:5px;"></i>
-                    One project, three modes
-                </h3>
-                <p style="margin-bottom:0.5rem;">Sign → Text, Text → Signs, Voice ↔ Signs — all from the same backend.
+            <div>
+                <div class="stat-val">4.5h</div>
+                <div class="stat-label">Practice Time</div>
+            </div>
+        </div>
+
+        <div class="glass-card stat-card">
+            <div class="icon-box" style="background: rgba(16, 185, 129, 0.1); color: var(--hs-success);">
+                <i data-lucide="target"></i>
+            </div>
+            <div>
+                <div class="stat-val">92%</div>
+                <div class="stat-label">Avg. Accuracy</div>
+            </div>
+        </div>
+
+        <div class="glass-card stat-card">
+            <div class="icon-box" style="background: rgba(249, 115, 22, 0.1); color: var(--hs-accent);">
+                <i data-lucide="flame"></i>
+            </div>
+            <div>
+                <div class="stat-val">5 Days</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Primary Actions ───────────────────────────────────────── -->
+    <div class="action-grid">
+
+        <!-- Core Feature Launch -->
+        <article class="glass-card main-action-card d-flex flex-column justify-content-center">
+            <div style="max-width: 480px;">
+                <h2 style="font-weight:800; letter-spacing:-0.03em; margin-bottom: 1rem;">Real-Time Detection</h2>
+                <p style="color: var(--hs-text-soft); margin-bottom: 2rem; line-height: 1.6;">
+                    Launch the AI studio to translate your hand signs into text and speech instantly.
+                    Ensure your camera is enabled for the best experience.
                 </p>
-                <ul>
-                    <li>Camera dashboard for live signs</li>
-                    <li>Converters for practice &amp; teaching</li>
-                    <li>Socket-based streaming UX</li>
-                </ul>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('sign_text_converter') }}" class="btn-pill-blue">
+                        <i data-lucide="zap" class="btn-arrow"></i>
+                        Get Started
+                    </a>
+                    <a href="{{ url_for('voice_converter') }}" class="btn-outline">
+                        Get Help & Support
+                    </a>
+                </div>
             </div>
+            <!-- Decorative Icon -->
+            <i data-lucide="sparkles"
+                style="position:absolute; right: -20px; bottom: -20px; width: 180px; height: 180px; color: var(--hs-primary); opacity: 0.05; transform: rotate(-15deg);"></i>
+        </article>
+
+        <!-- Recent Activity -->
+        <article class="glass-card activity-card">
+            <h3
+                style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="history" style="width:18px; height:18px; color: var(--hs-primary);"></i>
+                Recent Activity
+            </h3>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <div class="activity-dot"></div>
+                    <div>
+                        <div style="font-size: 0.9rem; font-weight: 600;">Mastered 'Hello' Sign</div>
+                        <div style="font-size: 0.75rem; color: var(--hs-text-faint);">2 hours ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-dot" style="background: #a855f7;"></div>
+                    <div>
+                        <div style="font-size: 0.9rem; font-weight: 600;">30min Practice Session</div>
+                        <div style="font-size: 0.75rem; color: var(--hs-text-faint);">Yesterday</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-dot" style="background: var(--hs-success);"></div>
+                    <div>
+                        <div style="font-size: 0.9rem; font-weight: 600;">Completed ASL Basics</div>
+                        <div style="font-size: 0.75rem; color: var(--hs-text-faint);">3 days ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-dot" style="background: var(--hs-accent);"></div>
+                    <div>
+                        <div style="font-size: 0.9rem; font-weight: 600;">New Streak Started!</div>
+                        <div style="font-size: 0.75rem; color: var(--hs-text-faint);">5 days ago</div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <!-- ── Secondary Features ────────────────────────────────────── -->
+    <section class="hs-section" style="padding-top: 0;">
+        <div class="hs-features-header" style="text-align: left; margin-inline: 0; max-width: 100%;">
+            <p class="hs-eyebrow">Explore More</p>
+            <h2 style="font-weight:800; letter-spacing:-0.03em;">Continue Learning</h2>
         </div>
 
-    </div>
-</section>
+        <div class="hs-features-grid">
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon"><i data-lucide="type"></i></div>
+                <h3>Text → Signs</h3>
+                <p>Convert any written text into ASL visual sequences.</p>
+                <a href="{{ url_for('sign_text_converter') }}"
+                    style="font-size: 0.85rem; font-weight: 700; color: var(--hs-primary); text-decoration: none; margin-top: 1rem; display: inline-block;">
+                    Open Converter &rarr;
+                </a>
+            </article>
 
-<!-- ── Capabilities ───────────────────────────────────────────── -->
-<section class="hs-section hs-features" data-animate="section">
-    <div class="hs-features-header">
-        <p class="hs-eyebrow" style="display:inline-flex;">Capabilities</p>
-        <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-0.02em;margin-block:0.6rem;">
-            Everything for sign-aware experiences.
-        </h2>
-        <p style="color:var(--hs-text-soft);font-size:0.95rem;line-height:1.75;">
-            Use HandSignify as a playground for assistive interfaces, teaching tools, or research experiments.
-        </p>
-    </div>
-    <div class="hs-features-grid">
-        <article class="hs-feature-card">
-            <div class="hs-feature-icon"><i data-lucide="monitor"></i></div>
-            <h3>Sign → Text</h3>
-            <p>Stream webcam input into a hand-landmark model and get stable text output for captions or logs.</p>
-        </article>
-        <article class="hs-feature-card">
-            <div class="hs-feature-icon"><i data-lucide="type"></i></div>
-            <h3>Text → Signs</h3>
-            <p>Turn any phrase into a sequence of ASL letter cards — perfect for learning and teaching flows.</p>
-        </article>
-        <article class="hs-feature-card">
-            <div class="hs-feature-icon"><i data-lucide="mic"></i></div>
-            <h3>Voice → Signs</h3>
-            <p>Use browser speech recognition to convert spoken language into sign sequences in real time.</p>
-        </article>
-        <article class="hs-feature-card">
-            <div class="hs-feature-icon"><i data-lucide="volume-2"></i></div>
-            <h3>Signs → Voice</h3>
-            <p>Detect signs, accumulate text, and speak them back using synthesis for accessible dialogs.</p>
-        </article>
-    </div>
-</section>
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                    <i data-lucide="mic"></i>
+                </div>
+                <h3>Voice → Signs</h3>
+                <p>Use your microphone to see sign language in real-time.</p>
+                <a href="{{ url_for('sign_text_converter') }}"
+                    style="font-size: 0.85rem; font-weight: 700; color: #a855f7; text-decoration: none; margin-top: 1rem; display: inline-block;">
+                    Try Voice Mode &rarr;
+                </a>
+            </article>
 
-<!-- ── How it works ───────────────────────────────────────────── -->
-<section class="hs-section hs-how" data-animate="section">
-    <div style="text-align:center;max-width:580px;margin-inline:auto;margin-bottom:2.5rem;">
-        <p class="hs-eyebrow" style="display:inline-flex;">Flow</p>
-        <h2 style="font-size:clamp(1.5rem,2.8vw,2rem);font-weight:800;letter-spacing:-0.02em;margin-block:0.6rem;">
-            From camera frame to meaningful output.
-        </h2>
-        <p style="color:var(--hs-text-soft);font-size:0.92rem;line-height:1.75;">
-            Flask · Socket.IO · MediaPipe · Random Forest — wired for clarity and speed.
-        </p>
-    </div>
-    <div class="hs-steps-grid">
-        <article class="hs-step-card">
-            <div class="hs-step-index">1</div>
-            <h3>Capture</h3>
-            <p>Frames stream from the browser into the backend MJPEG endpoint.</p>
-        </article>
-        <article class="hs-step-card">
-            <div class="hs-step-index">2</div>
-            <h3>Interpret</h3>
-            <p>MediaPipe extracts 21-point hand landmarks fed into a trained Random Forest model.</p>
-        </article>
-        <article class="hs-step-card">
-            <div class="hs-step-index">3</div>
-            <h3>Deliver</h3>
-            <p>Predictions stream back via WebSocket and update the UI as text, signs, or speech.</p>
-        </article>
-    </div>
-</section>
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--hs-success);">
+                    <i data-lucide="book-open"></i>
+                </div>
+                <h3>Tutorials</h3>
+                <p>New guides on advanced ISL sentence structure.</p>
+                <a href="{{ url_for('voice_converter') }}"
+                    style="font-size: 0.85rem; font-weight: 700; color: var(--hs-success); text-decoration: none; margin-top: 1rem; display: inline-block;">
+                    Read Guide &rarr;
+                </a>
+            </article>
 
-<!-- ── CTA Banner ─────────────────────────────────────────────── -->
-<section class="hs-section" data-animate="section" style="padding-top:1rem;padding-bottom:4rem;">
-    <div
-        style="max-width:640px;margin-inline:auto;text-align:center;padding:2.5rem 2rem;border-radius:var(--hs-r-xl);background:linear-gradient(135deg,rgba(59,111,239,0.1),rgba(99,102,241,0.08));border:1px solid rgba(59,111,239,0.2);">
-        <h2 style="font-size:1.6rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.6rem;">
-            Ready to break barriers?
-        </h2>
-        <p style="color:var(--hs-text-soft);font-size:0.95rem;margin-bottom:1.5rem;">
-            Start translating signs in seconds — no account required.
-        </p>
-        <a href="{{ url_for('sign_text_converter') }}" class="btn-pill-white" style="font-size:1rem;">
-            Open Converter
-            <span class="btn-arrow-right">&rarr;</span>
-        </a>
-    </div>
-</section>
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon" style="background: rgba(249, 115, 22, 0.1); color: var(--hs-accent);">
+                    <i data-lucide="users"></i>
+                </div>
+                <h3>Community</h3>
+                <p>Join other learners and share your progress.</p>
+                <a href="{{ url_for('about') }}"
+                    style="font-size: 0.85rem; font-weight: 700; color: var(--hs-accent); text-decoration: none; margin-top: 1rem; display: inline-block;">
+                    About Us &rarr;
+                </a>
+            </article>
+        </div>
+    </section>
 
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Init Lucide
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+</script>
 {% endblock %}

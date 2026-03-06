@@ -19,6 +19,7 @@ project_root/
 ├── app.py              # Main Flask application entry point
 ├── manage_server.py    # Server management utility
 ├── server.bat          # Easy start/stop script for Windows
+├── setup_project.bat   # ONE-CLICK setup script for Windows [NEW]
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Environment variables template
 ├── models/             # Pre-trained models and data pickles
@@ -32,25 +33,22 @@ project_root/
 
 ### 1. Clone the Repository
 ```powershell
-git clone https://github.com/SarveshVeshi/Final-Year-Project-Diploma-in-Coud-Computing-and-Big-Data-.git
-cd Final-Year-Project-Diploma-in-Coud-Computing-and-Big-Data-
+git clone https://github.com/SarveshVeshi/final-year-project-of-diploma.git
+cd final-year-project-of-diploma
 ```
 
-### 2. Prepare Environment
-We recommend using a virtual environment:
+### 2. Automatic Setup (Windows)
+Simply run the setup script to create a virtual environment, install dependencies, and configure your environment:
+```powershell
+./setup_project.bat
+```
+
+### 3. Manual Setup (Optional)
+If you prefer manual setup:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-```powershell
 pip install -r requirements.txt
-```
-
-### 4. Configuration
-Copy `.env.example` to `.env` and configure your settings:
-```powershell
 copy .env.example .env
 ```
 

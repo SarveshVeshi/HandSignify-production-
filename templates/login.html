@@ -4,6 +4,21 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lamp-login.css') }}">
+<style>
+    /* Immediately hide base-template decorations to prevent flash of colored spots */
+    .hs-noise-layer,
+    .hs-orb,
+    .cursor-glow,
+    .navbar,
+    footer {
+        display: none !important;
+    }
+
+    body {
+        background: #0B1120 !important;
+        overflow: hidden;
+    }
+</style>
 {% endblock %}
 
 {% block content %}

@@ -3,631 +3,401 @@
 {% block title %}Help & Support | HandSignify{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='sign_generator.css') }}">
 <style>
-    /* Hero Section */
+    /* Custom layout refinements for the support page */
+    .support-page-shell {
+        max-width: 1200px;
+        margin-inline: auto;
+    }
+
     .support-hero {
-        background: linear-gradient(135deg, rgba(59, 111, 239, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
+        text-align: center;
+        padding-block: clamp(2rem, 5vw, 3.5rem);
+    }
+
+    /* Reduce spacing between sections */
+    .hs-section {
+        padding-block: clamp(1.5rem, 4vw, 2.5rem) !important;
+    }
+
+    .hs-features-header {
+        margin-bottom: 1.5rem !important;
+    }
+
+    /* Icon grid sizing */
+    .support-icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+    }
+
+    /* FAQ Premium Accordion */
+    .faq-item {
+        background: rgba(255, 255, 255, 0.6);
         border: 1px solid var(--hs-border);
         border-radius: var(--hs-r-lg);
-        padding: 3rem 2rem;
-        text-align: center;
-        margin-bottom: 3rem;
-    }
-
-    .support-hero h1 {
-        font-size: 2.5rem;
-        font-weight: 900;
-        letter-spacing: -0.03em;
-        color: var(--hs-text-main);
-        margin: 0 0 0.75rem 0;
-        background: linear-gradient(135deg, #3b6fef 0%, #ec4899 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .support-hero p {
-        font-size: 1.1rem;
-        color: var(--hs-text-soft);
-        margin: 0;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* Section Headers */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        margin-top: 2rem;
-    }
-
-    .section-icon {
-        font-size: 2.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, rgba(59, 111, 239, 0.15) 0%, rgba(59, 111, 239, 0.05) 100%);
-        border: 2px solid var(--hs-primary);
-        border-radius: var(--hs-r-lg);
-    }
-
-    .section-title {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: var(--hs-text-main);
-        letter-spacing: -0.02em;
-        margin: 0;
-    }
-
-    /* Converter Cards - Getting Started */
-    .converter-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
-
-    .converter-card {
-        background: linear-gradient(135deg, var(--hs-surface-light) 0%, rgba(255, 255, 255, 0.5) 100%);
-        border: 2px solid var(--hs-border);
-        border-radius: var(--hs-r-lg);
-        padding: 1.75rem;
-        text-align: center;
-        transition: all var(--hs-dur-fast) var(--hs-ease);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .converter-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #3b6fef, #ec4899, #f97316, #06b6d4);
-        background-size: 300% 100%;
-    }
-
-    .converter-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 24px rgba(59, 111, 239, 0.15);
-        border-color: var(--hs-primary);
-    }
-
-    .converter-icon {
-        font-size: 3rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .converter-card h3 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--hs-text-main);
-        margin: 0 0 0.5rem 0;
-    }
-
-    .converter-card p {
-        font-size: 0.9rem;
-        color: var(--hs-text-soft);
-        margin: 0;
-        line-height: 1.5;
-    }
-
-    /* Tips Grid */
-    .tips-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
-
-    .tip-card {
-        background: linear-gradient(135deg, rgba(59, 111, 239, 0.08) 0%, rgba(59, 111, 239, 0.02) 100%);
-        border: 2px solid rgba(59, 111, 239, 0.12);
-        border-radius: var(--hs-r-lg);
-        padding: 1.5rem;
-        transition: all var(--hs-dur-fast) var(--hs-ease);
-    }
-
-    .tip-card:hover {
-        border-color: var(--hs-primary);
-        box-shadow: 0 8px 16px rgba(59, 111, 239, 0.1);
-        transform: translateY(-4px);
-    }
-
-    .tip-icon {
-        font-size: 2rem;
-        margin-bottom: 0.75rem;
-        display: inline-block;
-    }
-
-    .tip-title {
-        font-weight: 700;
-        font-size: 1rem;
-        color: var(--hs-text-main);
-        margin: 0 0 0.5rem 0;
-    }
-
-    .tip-text {
-        font-size: 0.9rem;
-        color: var(--hs-text-soft);
-        margin: 0;
-        line-height: 1.5;
-    }
-
-    /* FAQ Section */
-    .faq-container {
-        margin-bottom: 3rem;
-    }
-
-    .faq-item {
         margin-bottom: 1rem;
+        overflow: hidden;
+        transition: all var(--hs-dur-med) var(--hs-ease);
+    }
+
+    .faq-item:hover {
+        background: rgba(255, 255, 255, 0.85);
+        border-color: var(--hs-primary);
+        box-shadow: var(--hs-shadow-sm);
     }
 
     .faq-question {
+        padding: 1.4rem 1.8rem;
         display: flex;
         align-items: center;
-        gap: 1rem;
-        background: linear-gradient(135deg, var(--hs-surface-light) 0%, rgba(255, 255, 255, 0.5) 100%);
-        border: 2px solid var(--hs-border);
-        border-radius: var(--hs-r-lg);
-        padding: 1.25rem;
+        justify-content: space-between;
         cursor: pointer;
-        font-weight: 600;
-        font-size: 1rem;
-        color: var(--hs-text-main);
-        transition: all var(--hs-dur-fast) var(--hs-ease);
-    }
-
-    .faq-question:hover {
-        border-color: var(--hs-primary);
-        background: rgba(59, 111, 239, 0.04);
-    }
-
-    .faq-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        background: var(--hs-primary);
-        color: white;
-        border-radius: 50%;
-        flex-shrink: 0;
-        transition: transform 0.3s var(--hs-ease);
         font-weight: 700;
+        color: var(--hs-text-main);
     }
 
-    .faq-toggle.active {
+    .faq-toggle-icon {
+        width: 20px;
+        height: 20px;
+        color: var(--hs-primary);
+        transition: transform 0.4s var(--hs-ease);
+    }
+
+    .faq-item.active .faq-toggle-icon {
         transform: rotate(180deg);
     }
 
     .faq-answer {
-        display: none;
-        padding: 1.5rem;
-        background: rgba(59, 111, 239, 0.05);
-        border: 2px solid rgba(59, 111, 239, 0.1);
-        border-top: none;
-        border-radius: 0 0 var(--hs-r-lg) var(--hs-r-lg);
-        margin-top: -2px;
-        color: var(--hs-text-main);
-        animation: slideDown 0.3s var(--hs-ease);
-        line-height: 1.6;
-    }
-
-    .faq-answer.active {
-        display: block;
-    }
-
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Contact Grid */
-    .contact-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
-
-    .contact-card {
-        background: linear-gradient(135deg, var(--hs-surface-light) 0%, rgba(255, 255, 255, 0.5) 100%);
-        border: 2px solid var(--hs-border);
-        border-radius: var(--hs-r-lg);
-        padding: 2rem 1.5rem;
-        text-align: center;
-        transition: all var(--hs-dur-fast) var(--hs-ease);
-        position: relative;
+        max-height: 0;
         overflow: hidden;
+        transition: max-height 0.4s var(--hs-ease), padding 0.4s ease;
+        color: var(--hs-text-soft);
+        font-size: 0.95rem;
+        line-height: 1.7;
     }
 
-    .contact-card::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(59, 111, 239, 0.1) 0%, transparent 70%);
-        transition: all 0.3s var(--hs-ease);
+    .faq-item.active .faq-answer {
+        max-height: 300px;
+        padding: 0 1.8rem 1.8rem;
     }
 
-    .contact-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 28px rgba(59, 111, 239, 0.15);
-        border-color: var(--hs-primary);
+    /* Team Section Styles */
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
     }
 
-    .contact-card:hover::before {
-        top: 50%;
-        right: -30%;
+    .team-card {
+        text-align: center;
+        padding: 2.5rem 2rem;
     }
 
-    .contact-card-content {
-        position: relative;
-        z-index: 1;
-    }
-
-    .contact-avatar {
-        width: 80px;
-        height: 80px;
+    .team-avatar {
+        width: 84px;
+        height: 84px;
         border-radius: 50%;
+        margin-inline: auto;
+        margin-bottom: 1.25rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-weight: 800;
         font-size: 1.8rem;
-        margin: 0 auto 1rem;
-        box-shadow: 0 8px 16px rgba(59, 111, 239, 0.2);
-    }
-
-    .contact-name {
         font-weight: 800;
-        font-size: 1.1rem;
-        color: var(--hs-text-main);
-        margin: 0 0 0.25rem 0;
+        color: #fff;
+        box-shadow: var(--hs-shadow-sm);
+        position: relative;
     }
 
-    .contact-role {
-        font-size: 0.85rem;
+    .team-avatar::after {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 2px solid var(--hs-primary-soft);
+        opacity: 0.4;
+    }
+
+    .team-role {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
         color: var(--hs-primary);
-        font-weight: 600;
-        margin: 0 0 1rem 0;
+        margin-bottom: 1.2rem;
     }
 
-    .contact-email {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: var(--hs-primary);
-        color: white;
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 700;
-        padding: 0.6rem 1.2rem;
-        border-radius: var(--hs-r-pill);
-        transition: all var(--hs-dur-fast);
+    .avatar-sv {
+        background: linear-gradient(135deg, #3b6fef, #6366f1);
     }
 
-    .contact-email:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(59, 111, 239, 0.3);
+    .avatar-jg {
+        background: linear-gradient(135deg, #ec4899, #f43f5e);
     }
 
-    .avatar-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .avatar-pink { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
-    .avatar-orange { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
-    .avatar-cyan { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
-
-    /* Resources Grid */
-    .resources-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.5rem;
+    .avatar-vk {
+        background: linear-gradient(135deg, #f97316, #f43f5e);
     }
 
-    .resource-card {
-        background: linear-gradient(135deg, var(--hs-surface-light) 0%, rgba(255, 255, 255, 0.5) 100%);
-        border: 2px solid var(--hs-border);
-        border-radius: var(--hs-r-lg);
-        padding: 1.5rem;
-        text-decoration: none;
-        color: var(--hs-text-main);
-        transition: all var(--hs-dur-fast);
-    }
-
-    .resource-card:hover {
-        transform: translateY(-6px);
-        border-color: var(--hs-primary);
-        box-shadow: 0 12px 24px rgba(59, 111, 239, 0.12);
-    }
-
-    .resource-icon {
-        font-size: 2.5rem;
-        margin-bottom: 0.75rem;
-        display: inline-block;
-    }
-
-    .resource-title {
-        font-weight: 700;
-        font-size: 1.05rem;
-        margin: 0 0 0.5rem 0;
-    }
-
-    .resource-desc {
-        font-size: 0.9rem;
-        color: var(--hs-text-soft);
-        margin: 0;
+    .avatar-ag {
+        background: linear-gradient(135deg, #06b6d4, #3b6fef);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<main class="generator-feature" data-animate="section">
-    <div class="generator-card">
-        <!-- Hero Section -->
-        <div class="support-hero">
-            <h1>Help & Support</h1>
-            <p>Everything you need to know about using HandSignify converters. Get started in minutes and master all features.</p>
+<div class="support-page-shell page-fade-in">
+
+    <!-- ── Hero Section ─────────────────────────────────────────── -->
+    <header class="support-hero">
+        <p class="hs-eyebrow">
+            <i data-lucide="life-buoy" style="width:12px;height:12px;"></i>
+            Support Center
+        </p>
+        <h1 class="hs-hero-title">How can we help <span>you today?</span></h1>
+        <p class="hs-hero-subtitle" style="margin-inline:auto; max-width: 620px;">
+            Everything you need to know about HandSignify. If you can't find what you're looking for,
+            our specialized team is just an email away.
+        </p>
+    </header>
+
+    <!-- ── Getting Started ────────────────────────────────────────── -->
+    <section class="hs-section">
+        <div class="hs-features-header">
+            <p class="hs-eyebrow">Quick Start</p>
+            <h2 style="font-weight:800; letter-spacing:-0.03em;">Mastering the Converters</h2>
         </div>
 
-        <!-- Getting Started Section -->
-        <div class="section-header">
-            <div class="section-icon">🚀</div>
-            <h2 class="section-title">Getting Started</h2>
-        </div>
-        <div class="converter-cards">
-            <div class="converter-card">
-                <div class="converter-icon">📷</div>
+        <div class="hs-features-grid">
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon"><i data-lucide="camera"></i></div>
                 <h3>Sign → Text</h3>
-                <p>Enable your camera and show hand signs. The AI recognizes them in real-time and converts to text.</p>
-            </div>
-            <div class="converter-card">
-                <div class="converter-icon">✍️</div>
+                <p>Enable your camera and show hand signs. The AI recognizes them in real-time and converts to text
+                    instantly.</p>
+            </article>
+
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon"><i data-lucide="pen-tool"></i></div>
                 <h3>Text → Sign</h3>
-                <p>Type or paste any text. The system generates corresponding ASL/ISL hand-sign images instantly.</p>
-            </div>
-            <div class="converter-card">
-                <div class="converter-icon">🎤</div>
+                <p>Type or paste any text. The system generates corresponding ASL/ISL hand-sign images from our
+                    specialized library.</p>
+            </article>
+
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon"><i data-lucide="mic"></i></div>
                 <h3>Voice → Sign</h3>
-                <p>Speak into your microphone. Your speech is transcribed and converted to sign language visually.</p>
-            </div>
-            <div class="converter-card">
-                <div class="converter-icon">🔊</div>
+                <p>Speak into your microphone. Your speech is transcribed and converted to sign language visuals for
+                    accessible learning.</p>
+            </article>
+
+            <article class="hs-feature-card">
+                <div class="hs-feature-icon"><i data-lucide="volume-2"></i></div>
                 <h3>Sign → Voice</h3>
-                <p>Show signs on camera. The system recognizes them and reads them aloud using text-to-speech.</p>
-            </div>
+                <p>Show signs on camera. The system recognizes them and reads them aloud using our integrated
+                    text-to-speech engine.</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- ── Tips & Tricks ──────────────────────────────────────────── -->
+    <section class="hs-section">
+        <div class="hs-features-header">
+            <p class="hs-eyebrow"
+                style="background: rgba(249, 115, 22, 0.1); color: var(--hs-accent); border-color: rgba(249, 115, 22, 0.2);">
+                Optimization</p>
+            <h2 style="font-weight:800; letter-spacing:-0.03em;">Tips for Best Results</h2>
         </div>
 
-        <!-- Tips & Tricks Section -->
-        <div class="section-header">
-            <div class="section-icon">💡</div>
-            <h2 class="section-title">Tips & Tricks</h2>
+        <div class="hs-features-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+            <article class="hs-feature-card d-flex align-items-start gap-3">
+                <div class="hs-feature-icon flex-shrink-0" style="margin-bottom:0;"><i data-lucide="sun"></i></div>
+                <div>
+                    <h3 style="margin-bottom:0.25rem;">Good Lighting</h3>
+                    <p>Brightness is key. Ensure your hand is well-lit without heavy shadows for the AI to track
+                        landmarks accurately.</p>
+                </div>
+            </article>
+
+            <article class="hs-feature-card d-flex align-items-start gap-3">
+                <div class="hs-feature-icon flex-shrink-0" style="margin-bottom:0;"><i data-lucide="move"></i></div>
+                <div>
+                    <h3 style="margin-bottom:0.25rem;">Hand Position</h3>
+                    <p>Keep your hand roughly 1-2 feet from the camera and centered. Palm-facing gestures work best.</p>
+                </div>
+            </article>
+
+            <article class="hs-feature-card d-flex align-items-start gap-3">
+                <div class="hs-feature-icon flex-shrink-0" style="margin-bottom:0;"><i data-lucide="layout"></i></div>
+                <div>
+                    <h3 style="margin-bottom:0.25rem;">Clear Space</h3>
+                    <p>Background noise isn't just audio. A plain, non-cluttered background helps the model isolate your
+                        hand motion.</p>
+                </div>
+            </article>
+
+            <article class="hs-feature-card d-flex align-items-start gap-3">
+                <div class="hs-feature-icon flex-shrink-0" style="margin-bottom:0;"><i data-lucide="clock"></i></div>
+                <div>
+                    <h3 style="margin-bottom:0.25rem;">Steady Pace</h3>
+                    <p>The model processes frames in real-time. Moving at a consistent, steady pace provides much higher
+                        stability.</p>
+                </div>
+            </article>
         </div>
-        <div class="tips-grid">
-            <div class="tip-card">
-                <div class="tip-icon">☀️</div>
-                <h3 class="tip-title">Good Lighting</h3>
-                <p class="tip-text">Ensure your camera area has bright, even lighting for best recognition accuracy.</p>
-            </div>
-            <div class="tip-card">
-                <div class="tip-icon">✋</div>
-                <h3 class="tip-title">Hand Position</h3>
-                <p class="tip-text">Keep your hand clearly visible within the camera frame, palm facing the camera.</p>
-            </div>
-            <div class="tip-card">
-                <div class="tip-icon">📐</div>
-                <h3 class="tip-title">Clear Space</h3>
-                <p class="tip-text">Minimize background clutter. A neutral background helps the AI focus on your signs.</p>
-            </div>
-            <div class="tip-card">
-                <div class="tip-icon">⏱️</div>
-                <h3 class="tip-title">Steady Pace</h3>
-                <p class="tip-text">Move at a consistent pace. Sudden jerky movements may reduce recognition accuracy.</p>
-            </div>
-            <div class="tip-card">
-                <div class="tip-icon">🎧</div>
-                <h3 class="tip-title">Use Headphones</h3>
-                <p class="tip-text">For voice input, wear headphones to avoid background noise interference.</p>
-            </div>
-            <div class="tip-card">
-                <div class="tip-icon">🌐</div>
-                <h3 class="tip-title">Multiple Languages</h3>
-                <p class="tip-text">Switch between ASL and ISL in Text → Sign for different sign language variants.</p>
-            </div>
+    </section>
+
+    <!-- ── FAQ Section ────────────────────────────────────────────── -->
+    <section class="hs-section">
+        <div class="hs-features-header">
+            <p class="hs-eyebrow">Frequently Asked</p>
+            <h2 style="font-weight:800; letter-spacing:-0.03em;">Common Questions</h2>
         </div>
 
-        <!-- FAQ Section -->
-        <div class="section-header">
-            <div class="section-icon">❓</div>
-            <h2 class="section-title">FAQ</h2>
-        </div>
-        <div class="faq-container">
+        <div style="max-width: 800px; margin-inline: auto;">
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaqAnswer(this)">
-                    <div class="faq-toggle">
-                        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
-                    </div>
+                <div class="faq-question">
                     <span>Do I need to give camera permissions?</span>
+                    <i data-lucide="chevron-down" class="faq-toggle-icon"></i>
                 </div>
                 <div class="faq-answer">
-                    Yes, for Sign → Text and Sign → Voice, your browser will ask for camera permission on first use. This is processed locally and never stored on our servers. You have full control over permissions.
+                    Yes, for Sign → Text and Sign → Voice, your browser will ask for camera permission. This logic is
+                    handled locally in your browser and we never store your video on our servers.
                 </div>
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaqAnswer(this)">
-                    <div class="faq-toggle">
-                        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
-                    </div>
+                <div class="faq-question">
                     <span>Is my data private?</span>
+                    <i data-lucide="chevron-down" class="faq-toggle-icon"></i>
                 </div>
                 <div class="faq-answer">
-                    Yes, all data is processed in real-time on your device. We do not store or transmit your camera footage or audio outside your browser unless you explicitly share it. Your privacy is our priority.
+                    Absolutely. HandSignify is designed as a privacy-first tool. Sign recognition data and intermediate
+                    camera frames are transient and processed in your local session only.
                 </div>
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaqAnswer(this)">
-                    <div class="faq-toggle">
-                        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
-                    </div>
+                <div class="faq-question">
                     <span>What languages are supported?</span>
+                    <i data-lucide="chevron-down" class="faq-toggle-icon"></i>
                 </div>
                 <div class="faq-answer">
-                    Currently, we support American Sign Language (ASL) and Indian Sign Language (ISL) for primary conversions. Voice recognition supports multiple spoken languages depending on your browser locale.
+                    Currently, we support American Sign Language (ASL). We are actively working on Indian Sign Language
+                    (ISL) support for all converter modes.
                 </div>
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaqAnswer(this)">
-                    <div class="faq-toggle">
-                        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
-                    </div>
-                    <span>Does it work on mobile devices?</span>
-                </div>
-                <div class="faq-answer">
-                    Yes! All converters work on mobile devices. However, for best results with camera features, use a device with a good camera and stable internet connection.
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaqAnswer(this)">
-                    <div class="faq-toggle">
-                        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
-                    </div>
+                <div class="faq-question">
                     <span>How accurate is the recognition?</span>
+                    <i data-lucide="chevron-down" class="faq-toggle-icon"></i>
                 </div>
                 <div class="faq-answer">
-                    Our AI model achieves ~90%+ accuracy for clear sign recognition. Accuracy improves with good lighting, clear hand visibility, and steady hand movements. The system learns from usage patterns.
+                    Our current Random Forest model achieves over 90% accuracy in controlled lighting. Following the
+                    "Tips & Tricks" section above helps ensure the highest possible precision.
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaqAnswer(this)">
-                    <div class="faq-toggle">
-                        <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+    <!-- ── Learning Resources Section ───────────────────────────── -->
+    <section class="hs-section">
+        <div class="hs-features-header"
+            style="text-align: left; margin-inline: 0; max-width: 100%; display: flex; align-items: center; gap: 1rem;">
+            <div
+                style="width: 48px; height: 48px; background: rgba(59, 111, 239, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="library" style="width: 24px; height: 24px; color: var(--hs-primary);"></i>
+            </div>
+            <h2 style="font-weight:800; letter-spacing:-0.03em; margin: 0;">Learning Resources</h2>
+        </div>
+
+        <div class="hs-features-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <a href="https://www.lifeprint.com/asl101/fingerspelling/index.htm" target="_blank"
+                rel="noopener noreferrer"
+                style="text-decoration: none; color: inherit; display: block; height: 100%; transition: transform 0.3s ease;">
+                <article class="hs-feature-card" style="height: 100%; transition: all 0.3s ease;">
+                    <div class="hs-feature-icon" style="background: rgba(59, 111, 239, 0.1); color: var(--hs-primary);">
+                        <i data-lucide="languages"></i>
                     </div>
-                    <span>Found a bug? How do I report it?</span>
-                </div>
-                <div class="faq-answer">
-                    Found an issue? Please reach out to our team using the contact information below. We appreciate your feedback and will address bugs as soon as possible!
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact Section -->
-        <div class="section-header">
-            <div class="section-icon">📧</div>
-            <h2 class="section-title">Get In Touch</h2>
-        </div>
-        <div class="contact-grid">
-            <div class="contact-card">
-                <div class="contact-card-content">
-                    <div class="contact-avatar avatar-green">SV</div>
-                    <h3 class="contact-name">Sarvesh Veshi</h3>
-                    <p class="contact-role">Backend Developer</p>
-                    <a href="mailto:veshisarvesh23@gmail.com" class="contact-email">
-                        <i data-lucide="mail" style="width:16px;height:16px;"></i>
-                        Email
-                    </a>
-                </div>
-            </div>
-
-            <div class="contact-card">
-                <div class="contact-card-content">
-                    <div class="contact-avatar avatar-pink">JG</div>
-                    <h3 class="contact-name">Janhavi Godase</h3>
-                    <p class="contact-role">Systems Analysis</p>
-                    <a href="mailto:janhavi.godase07@gmail.com" class="contact-email">
-                        <i data-lucide="mail" style="width:16px;height:16px;"></i>
-                        Email
-                    </a>
-                </div>
-            </div>
-
-            <div class="contact-card">
-                <div class="contact-card-content">
-                    <div class="contact-avatar avatar-orange">VK</div>
-                    <h3 class="contact-name">Vedant Kondvilkar</h3>
-                    <p class="contact-role">Frontend Developer</p>
-                    <a href="mailto:kondvilkarvedant@gmail.com" class="contact-email">
-                        <i data-lucide="mail" style="width:16px;height:16px;"></i>
-                        Email
-                    </a>
-                </div>
-            </div>
-
-            <div class="contact-card">
-                <div class="contact-card-content">
-                    <div class="contact-avatar avatar-cyan">AG</div>
-                    <h3 class="contact-name">Atharv Ghadigaonkar</h3>
-                    <p class="contact-role">UI Research</p>
-                    <a href="mailto:atharv.ghadigaonkar287@gmail.com" class="contact-email">
-                        <i data-lucide="mail" style="width:16px;height:16px;"></i>
-                        Email
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Learning Resources Section -->
-        <div class="section-header">
-            <div class="section-icon">📚</div>
-            <h2 class="section-title">Learning Resources</h2>
-        </div>
-        <div class="resources-grid">
-            <a href="#" class="resource-card">
-                <div class="resource-icon">🔤</div>
-                <h3 class="resource-title">ASL Alphabet Guide</h3>
-                <p class="resource-desc">Learn the American Sign Language alphabet with videos and images.</p>
+                    <h3>ASL Alphabet Guide</h3>
+                    <p>Learn the American Sign Language alphabet with comprehensive videos and illustrative images.</p>
+                </article>
             </a>
-            <a href="#" class="resource-card">
-                <div class="resource-icon">🤝</div>
-                <h3 class="resource-title">ISL Basics</h3>
-                <p class="resource-desc">Introduction to Indian Sign Language fundamentals.</p>
+
+            <a href="https://islrtc.nic.in/" target="_blank" rel="noopener noreferrer"
+                style="text-decoration: none; color: inherit; display: block; height: 100%; transition: transform 0.3s ease;">
+                <article class="hs-feature-card" style="height: 100%; transition: all 0.3s ease;">
+                    <div class="hs-feature-icon" style="background: rgba(249, 115, 22, 0.1); color: var(--hs-accent);">
+                        <i data-lucide="hand"></i>
+                    </div>
+                    <h3>ISL Basics</h3>
+                    <p>A structured introduction to the fundamentals of Indian Sign Language (ISL) for beginners.</p>
+                </article>
             </a>
-            <a href="#" class="resource-card">
-                <div class="resource-icon">💬</div>
-                <h3 class="resource-title">Common Phrases</h3>
-                <p class="resource-desc">Quick reference of frequently used sign phrases.</p>
+
+            <a href="https://www.lessontutor.com/ees_asl_everyday_phrases/" target="_blank" rel="noopener noreferrer"
+                style="text-decoration: none; color: inherit; display: block; height: 100%; transition: transform 0.3s ease;">
+                <article class="hs-feature-card" style="height: 100%; transition: all 0.3s ease;">
+                    <div class="hs-feature-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                        <i data-lucide="message-circle"></i>
+                    </div>
+                    <h3>Common Phrases</h3>
+                    <p>Learn frequently used sign language phrases for effective everyday communication.</p>
+                </article>
             </a>
-            <a href="#" class="resource-card">
-                <div class="resource-icon">🎥</div>
-                <h3 class="resource-title">Video Tutorials</h3>
-                <p class="resource-desc">Step-by-step video guides for each converter.</p>
+
+            <a href="https://www.youtube.com/results?search_query=sign+language+lessons+for+beginners" target="_blank"
+                rel="noopener noreferrer"
+                style="text-decoration: none; color: inherit; display: block; height: 100%; transition: transform 0.3s ease;">
+                <article class="hs-feature-card" style="height: 100%; transition: all 0.3s ease;">
+                    <div class="hs-feature-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">
+                        <i data-lucide="play-circle"></i>
+                    </div>
+                    <h3>Video Tutorials</h3>
+                    <p>Watch step-by-step video guides demonstrating how to use each converter on the platform.</p>
+                </article>
             </a>
         </div>
-    </div>
-</main>
+    </section>
+
+    <!-- ── Final CTA  ─────────────────────────────────────────────── -->
+    <section class="hs-section" style="padding-bottom: 5rem;">
+        <div class="glass-card" style="text-align:center; padding: 4rem 2rem; border-radius: 40px !important;">
+            <h2 style="font-weight:800; letter-spacing:-0.03em; margin-bottom: 1rem;">Ready to master the platform?</h2>
+            <p style="color: var(--hs-text-soft); margin-bottom: 2rem;">Head back to the converter to start your sign
+                language journey.</p>
+            <a href="{{ url_for('sign_text_converter') }}" class="btn-pill-white">
+                Back to Converter
+                <span class="btn-arrow-right">&rarr;</span>
+            </a>
+        </div>
+    </section>
+
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // FAQ Accordion Toggle
-    function toggleFaqAnswer(element) {
-        const answer = element.nextElementSibling;
-        const toggle = element.querySelector('.faq-toggle');
-        
-        answer.classList.toggle('active');
-        toggle.classList.toggle('active');
-    }
+    // FAQ Accordion Logic
+    document.querySelectorAll('.faq-question').forEach(q => {
+        q.addEventListener('click', () => {
+            const item = q.parentElement;
+            const wasActive = item.classList.contains('active');
 
-    // Initialize lucide icons
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+            // Close all
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+
+            // Toggle current
+            if (!wasActive) {
+                item.classList.add('active');
+            }
+        });
+    });
+
+    // Re-init lucide icons for dynamic content if needed
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 </script>
 {% endblock %}

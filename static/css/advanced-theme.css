@@ -183,24 +183,74 @@ body.hs-body {
 
 .navbar-brand {
   font-weight: 700;
-  font-size: 1.05rem;
-  letter-spacing: -0.01em;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
   color: var(--hs-text-main) !important;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.6rem;
   text-decoration: none;
+  transition: transform var(--hs-dur-med) var(--hs-ease);
 }
 
-.navbar-brand::before {
-  content: '';
-  display: block;
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
+.navbar-brand:hover {
+  transform: translateX(4px);
+}
+
+.hs-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hs-logo-icon-bg {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   background: linear-gradient(135deg, var(--hs-primary) 0%, var(--hs-indigo) 100%);
-  box-shadow: 0 4px 12px var(--hs-primary-glow);
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px var(--hs-primary-glow);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--hs-dur-slow) var(--hs-ease);
+}
+
+.hs-logo-icon-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.hs-logo-icon {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  z-index: 1;
+  transition: transform var(--hs-dur-slow) var(--hs-ease);
+}
+
+.navbar-brand:hover .hs-logo-icon-bg {
+  transform: rotate(-5deg) scale(1.05);
+}
+
+.navbar-brand:hover .hs-logo-icon {
+  transform: scale(1.1);
+}
+
+.hs-logo-text {
+  font-weight: 800;
+  color: var(--hs-text-main);
+}
+
+.hs-logo-text span {
+  background: linear-gradient(135deg, var(--hs-primary), var(--hs-indigo));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-left: 0.05em;
 }
 
 .nav-link {

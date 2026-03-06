@@ -21,7 +21,7 @@ import re
 import pickle
 import cv2
 import mediapipe as mp
-from mediapipe import solutions as mp_solutions
+from mediapipe.python import solutions as mp_solutions
 import numpy as np
 from services.sign_service import sign_service
 
@@ -103,12 +103,14 @@ class User(db.Model, UserMixin):
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 # ----------------------------------------------------
 
-# -------------------Welcome or Home Page-------------
+# -------------------Intro & Home Pages-------------------
+@app.route("/")
+def intro():
+    return render_template("intro.html")
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/home")
 def home():
-    session.clear()
-    return render_template('home.html')
+    return render_template("home.html")
 # ----------------------------------------------------
 
 # -------------------OAuth Callback Routes-------------------
@@ -154,7 +156,7 @@ def _oauth_login_or_register(oauth_id, provider, username, email):
         session['name'] = user.username
         session['logged_in'] = True
         flash(f'Welcome back, {user.username}!', 'success')
-        return redirect(url_for('tab_1'))
+        return redirect(url_for('home'))
     else:
         # New OAuth user — create account
         # Ensure unique username
@@ -177,7 +179,7 @@ def _oauth_login_or_register(oauth_id, provider, username, email):
         session['name'] = new_user.username
         session['logged_in'] = True
         flash(f'Account created via {provider.title()}! Welcome, {new_user.username}!', 'success')
-        return redirect(url_for('tab_1'))
+        return redirect(url_for('home'))
 # --------------------------------------------------------
 
 # -------------------feed back Page-----------------------
@@ -238,6 +240,15 @@ def generate_sign_video_api():
     
     result = sign_service.generate_sign_video(text, language)
     return jsonify(result)
+
+@app.route('/get_sign_images', methods=['POST'])
+def get_sign_images():
+    data = request.get_json()
+    text = data.get('text', '')
+    language = data.get('language', 'ASL')
+    
+    image_paths = sign_service.get_sign_images_from_text(text, language)
+    return jsonify({"success": True, "image_paths": image_paths})
 # ----------------------------------------------------
 
 @app.route('/sign_text_converter', methods=['GET'])
@@ -270,7 +281,7 @@ def login():
             flash('Login successfully.', category='success')
             session['name'] = user.username
             session['logged_in'] = True
-            return redirect(url_for('tab_1'))
+            return redirect(url_for('home'))
         else:
             flash(f'Login unsuccessful for {form.email.data}. Check email and password.', category='danger')
     return render_template('login.html', form=form)
@@ -333,7 +344,7 @@ def register():
         session['logged_in'] = True
         
         flash(f'Account Created for {form.username.data} successfully! Welcome!', category='success')
-        return redirect(url_for('tab_1'))
+        return redirect(url_for('home'))
 
     return render_template('register.html', form=form)
 # ----------------------------------------------------

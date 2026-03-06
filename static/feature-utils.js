@@ -40,58 +40,78 @@ function setupFeatureToggle(buttonSelector = '.tab-button', contentSelector = '.
  * @param {string} outputContainerId - ID of the container to append images to
  * @param {string} language - 'asl' or 'isl'
  */
-function convertTextToSign(text, outputContainerId, language = 'asl') {
-    const words = text.toUpperCase().split(' ');
+async function convertTextToSign(text, outputContainerId, language = 'asl') {
     const signOutput = document.getElementById(outputContainerId);
-    const langFolder = language.toLowerCase() === 'isl' ? 'isl-images' : 'asl-images';
-
     if (!signOutput) return;
 
     // Clear previous output
-    signOutput.innerHTML = '';
+    signOutput.innerHTML = '<div class="loading-signs">Loading signs...</div>';
 
-    // Process each word
-    words.forEach((word, wordIndex) => {
-        if (!word.trim()) return;
+    try {
+        const response = await fetch('/get_sign_images', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text, language }),
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            signOutput.innerHTML = '<div class="error-signs">Failed to load sign images.</div>';
+            return;
+        }
+
+        // Clear loading state
+        signOutput.innerHTML = '';
+
+        const imagePaths = data.image_paths;
+        if (imagePaths.length === 0) {
+            signOutput.innerHTML = '<div class="info-signs">No signs found for the given text.</div>';
+            return;
+        }
 
         const wordContainer = document.createElement('div');
         wordContainer.className = 'word-container';
 
-        for (let i = 0; i < word.length; i++) {
-            const char = word[i];
+        imagePaths.forEach((path, index) => {
+            const img = document.createElement('img');
+            img.className = 'letter-image';
+            img.src = `/static/${path}`;
 
-            if (/[A-Z0-9]/.test(char)) {
-                const img = document.createElement('img');
-                img.className = 'letter-image';
-                img.src = `/static/${langFolder}/${char}.png`;
-                img.alt = `${language.toUpperCase()} sign for ${char}`;
-                img.title = char;
+            // Extract label (either word or letter) for alt/title
+            const parts = path.split('/');
+            const filename = parts[parts.length - 1];
+            const label = filename.split('.')[1] || filename.split('.')[0];
 
-                const calculatedDelay = (wordIndex * 0.1) + (i * 0.05);
-                img.style.animationDelay = `${Math.min(calculatedDelay, 1.5)}s`;
+            img.alt = `${language.toUpperCase()} sign for ${label}`;
+            img.title = label;
 
-                img.onerror = function () {
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'letter-image missing';
-                    placeholder.textContent = char;
-                    placeholder.title = char;
-                    placeholder.style.animationDelay = this.style.animationDelay;
-                    this.parentNode.replaceChild(placeholder, this);
-                };
+            const calculatedDelay = index * 0.1;
+            img.style.animationDelay = `${Math.min(calculatedDelay, 2.0)}s`;
 
-                wordContainer.appendChild(img);
-            }
+            img.onerror = function () {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'letter-image missing';
+                placeholder.textContent = label.length > 1 ? '?' : label;
+                placeholder.title = `Missing sign for ${label}`;
+                placeholder.style.animationDelay = this.style.animationDelay;
+                this.parentNode.replaceChild(placeholder, this);
+            };
+
+            wordContainer.appendChild(img);
+        });
+
+        signOutput.appendChild(wordContainer);
+
+        if (signOutput.children.length > 0) {
+            signOutput.parentElement.classList.remove('hidden');
+            signOutput.parentElement.style.display = 'block';
+            signOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-
-        if (wordContainer.children.length > 0) {
-            signOutput.appendChild(wordContainer);
-        }
-    });
-
-    if (signOutput.children.length > 0) {
-        signOutput.parentElement.classList.remove('hidden');
-        signOutput.parentElement.style.display = 'block';
-        signOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (error) {
+        console.error('Error fetching sign images:', error);
+        signOutput.innerHTML = '<div class="error-signs">Error connecting to server.</div>';
     }
 }
 

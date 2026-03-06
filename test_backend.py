@@ -35,8 +35,8 @@ def main():
     payload = {"text": "hello", "language": "ASL"}
     if not test_endpoint("Sign Gen API", f"{BASE_URL}/generate_sign_video_api", method="POST", json_data=payload): all_passed = False
     
-    # 4. Sign Text Converter Page
-    if not test_endpoint("Converter Page", f"{BASE_URL}/sign-text-converter"): all_passed = False
+    # 4. Sign Text Converter Page (Tab 1)
+    if not test_endpoint("Converter Page (Tab 1)", f"{BASE_URL}/tab-1"): all_passed = False
 
     if all_passed:
         print("\nAll checks PASSED!")

@@ -63,10 +63,15 @@ function initWebSocket(callbacks = {}) {
 
         accumulatedText += char + " ";
 
-        // Update Prediction Output (Tab 1)
+        // Update Prediction Output (Tab 1 & Tab 4)
         const output = document.getElementById('predictionOutput');
         if (output) {
             output.innerText = accumulatedText;
+        }
+
+        const outputVoice = document.getElementById('accumulatedTextVoice');
+        if (outputVoice) {
+            outputVoice.innerText = accumulatedText;
         }
 
         if (callbacks.onStablePrediction) {
@@ -86,9 +91,12 @@ function initWebSocket(callbacks = {}) {
     });
 
     socket.on('refined_text_update', (data) => {
-        // Update Refined Text area (Tab 3)
+        // Only update Refined Text area if Voice → Sign tab is NOT active
+        // (Tab 3 manages its own refined text from speech recognition)
+        const voiceTab = document.getElementById('voiceToSignPanel');
+        const isVoiceTabActive = voiceTab && voiceTab.classList.contains('active');
         const refinedBox = document.getElementById('refinedTextBox');
-        if (refinedBox) {
+        if (refinedBox && !isVoiceTabActive) {
             refinedBox.value = data.refined_text;
         }
 
@@ -155,6 +163,9 @@ function clearAccumulatedText() {
 
     const displayVoice = document.getElementById('predictionDisplayVoice');
     if (displayVoice) displayVoice.innerText = "—";
+
+    const accumulatedVoice = document.getElementById('accumulatedTextVoice');
+    if (accumulatedVoice) accumulatedVoice.innerText = "";
 }
 
 function getAccumulatedText() {

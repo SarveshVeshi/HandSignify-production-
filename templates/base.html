@@ -43,7 +43,15 @@
         <!-- ── Navbar ─────────────────────────────────────────── -->
         <nav class="navbar navbar-expand-lg" role="navigation" aria-label="Main navigation">
             <div class="container-fluid px-0">
-                <a class="navbar-brand" href="{{ url_for('home') }}" aria-label="HandSignify home">HandSignify</a>
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('home') }}"
+                    aria-label="HandSignify home">
+                    <div class="hs-logo-container">
+                        <div class="hs-logo-icon-bg">
+                            <i data-lucide="hand" class="hs-logo-icon"></i>
+                        </div>
+                    </div>
+                    <span class="hs-logo-text">Hand<span>Signify</span></span>
+                </a>
 
                 <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false"
@@ -72,37 +80,29 @@
                         </li>
                     </ul>
 
-                    <ul class="navbar-nav ms-auto align-items-center gap-2">
-                        {% if session.get('logged_in') %}
-                        <li class="nav-item dropdown">
-                            <button
-                                class="nav-link dropdown-toggle border-0 bg-transparent d-flex align-items-center gap-2"
-                                id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span
-                                    style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--hs-primary),var(--hs-indigo));display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;">
-                                    {{ session.get('name','U')[0].upper() }}
-                                </span>
-                                {{ session.get('name', 'User') }}
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                                <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('reset_email') }}">Change Email</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('update_password') }}">Change Password</a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">Logout</a></li>
-                            </ul>
-                        </li>
-                        {% else %}
-                        <li class="nav-item">
-                            <a href="{{ url_for('register') }}" class="btn-pill-dot">
-                                <span class="btn-arrow">&rarr;</span>
-                                Get Started
-                            </a>
-                        </li>
-                        {% endif %}
+                    {% if request.endpoint not in ['sign_text_converter', 'tab_1', 'tab_2', 'tab_3', 'tab_4'] %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('sign_text_converter') }}" class="btn-pill-dot">
+                            <span class="btn-arrow">&rarr;</span>
+                            Get Started
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if session.get('logged_in') %}
+                    <li class="nav-item dropdown">
+                        <button class="nav-link dropdown-toggle border-0 bg-transparent d-flex align-items-center gap-2"
+                            id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span
+                                style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--hs-primary),var(--hs-indigo));display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;">
+                                {{ session.get('name','U')[0].upper() }}
+                            </span>
+                            {{ session.get('name', 'User') }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                     </ul>
                 </div>
             </div>

@@ -18,6 +18,10 @@ class SignLanguageService:
         self.output_dir = os.path.join('static', 'generated_assets')
         os.makedirs(self.output_dir, exist_ok=True)
         
+        # Word-level images cache (ASL)
+        self.words_dir = os.path.join('static', 'asl-images', 'words')
+        self.available_words = self._scan_word_images()
+        
         # Hand Skeleton Connections (Standard 21-point MediaPipe model)
         self.connections = [
             (0, 1), (1, 2), (2, 3), (3, 4), # Thumb
@@ -59,6 +63,74 @@ class SignLanguageService:
                     pose.append((x + shift, y))
             poses[char] = pose
         return poses
+
+    def _scan_word_images(self):
+        """Scans the words directory and returns a set of available word names (lowercase)."""
+        words = set()
+        if os.path.exists(self.words_dir):
+            for filename in os.listdir(self.words_dir):
+                if filename.endswith('.png'):
+                    word = filename.rsplit('.', 1)[0].lower()
+                    words.add(word)
+        print(f"Detected available word images: {sorted(list(words))}")
+        return words
+
+    def get_sign_images_from_text(self, input_text: str, language: str = 'asl') -> list:
+        """
+        Returns an ordered list of image paths for the given text.
+        Prioritizes multi-word phrases, then single-word images from static/asl-images/words/.
+        Falls back to character-by-character images in static/asl-images/.
+        """
+        if not input_text:
+            return []
+            
+        language = language.lower()
+        lang_folder = 'asl-images' if language == 'asl' else 'isl-images'
+        
+        # Normalize input
+        input_text = input_text.lower().strip()
+        words = input_text.split()
+        
+        image_paths = []
+        
+        # Compute the max number of words any phrase can have
+        max_phrase_len = max((len(w.split()) for w in self.available_words), default=1)
+        
+        i = 0
+        while i < len(words):
+            matched = False
+            
+            # Try matching longest phrase first, then shorter
+            if language == 'asl':
+                for length in range(min(max_phrase_len, len(words) - i), 0, -1):
+                    phrase = " ".join(words[i:i + length])
+                    clean_phrase = "".join(filter(str.isalnum, phrase.replace(" ", " ")))
+                    
+                    if phrase in self.available_words:
+                        image_paths.append(f"asl-images/words/{phrase}.png")
+                        i += length
+                        matched = True
+                        break
+                    elif clean_phrase in self.available_words:
+                        image_paths.append(f"asl-images/words/{clean_phrase}.png")
+                        i += length
+                        matched = True
+                        break
+            
+            if not matched:
+                # Fallback: single word check, then character-by-character
+                word = words[i]
+                clean_word = "".join(filter(str.isalnum, word))
+                
+                if language == 'asl' and clean_word in self.available_words:
+                    image_paths.append(f"asl-images/words/{clean_word}.png")
+                else:
+                    for char in word:
+                        if char.isalnum():
+                            image_paths.append(f"{lang_folder}/{char.upper()}.png")
+                i += 1
+                    
+        return image_paths
 
     def generate_sign_video(self, text, sign_language="ASL"):
         if not text:
