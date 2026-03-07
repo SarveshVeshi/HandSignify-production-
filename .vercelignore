@@ -1,0 +1,34 @@
+# Exclude large backup and temp folders
+temp_frontend/
+backup_frontend/
+backup/
+
+# Exclude virtual environments
+.venv/
+.venv*/
+venv/
+
+# Exclude documentation and logs
+*.log
+*.txt
+*.md
+!requirements.txt
+!api/*.py
+
+# Exclude scripts and batch files
+scripts/
+*.bat
+run.bat
+server.bat
+
+# Exclude Git and IDE files
+.git/
+.idea/
+.vscode/
+.github/
+
+# Exclude unused data
+video/
+data/
+instance/*.db
+!database.db
