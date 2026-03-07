@@ -8,27 +8,22 @@ backup/
 .venv*/
 venv/
 
-# Exclude documentation and logs
-*.log
-*.txt
-*.md
-!requirements.txt
-!api/*.py
-
-# Exclude scripts and batch files
+# Exclude specific files to keep requirements and others
 scripts/
 *.bat
 run.bat
 server.bat
+*.log
+DEPENDENCY_REPORT.md
+PROJECT_REPORT.md
+COMPLETE_BACKEND_MASTERY_GUIDE*
 
-# Exclude Git and IDE files
+# System
 .git/
 .idea/
 .vscode/
-.github/
 
-# Exclude unused data
+# Data
 video/
 data/
 instance/*.db
-!database.db

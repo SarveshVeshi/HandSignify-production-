@@ -14,3 +14,5 @@ flask-socketio
 eventlet
 email-validator
 python-dotenv
+requests
+flask-dance
