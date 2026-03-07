@@ -1,13 +1,8 @@
 {
-  "functions": {
-    "app.py": {
-      "runtime": "python3.10"
-    }
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app.py"
-    }
-  ]
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "dest": "api/index.py"
+        }
+    ]
 }

@@ -32,7 +32,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder='../templates', 
+            static_folder='../static')
 
 CORS(app)  # Allow cross-origin requests for all routes
 
@@ -40,11 +42,16 @@ CORS(app)  # Allow cross-origin requests for all routes
 bcrypt = Bcrypt(app)
 
 # -------------------Database Model Setup-------------------
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+# Use absolute path for SQLite to work from api/ folder
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJ_DIR = os.path.dirname(BASE_DIR)
+SQLITE_PATH = os.path.join(PROJ_DIR, 'database.db')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{SQLITE_PATH}')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'thisisasecretkey')
 serializer = Serializer(app.config['SECRET_KEY'])
 db = SQLAlchemy(app)
-app.app_context().push()
+# app.app_context().push() # Removing push() for cleaner serverless execution
 
 # -------------------Socket.IO Setup-------------------
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
