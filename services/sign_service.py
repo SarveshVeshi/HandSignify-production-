@@ -2,7 +2,11 @@ import os
 import time
 import requests
 import uuid
-import cv2
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
 import numpy as np
 
 class SignLanguageService:
@@ -180,6 +184,8 @@ class SignLanguageService:
             return {"success": False, "error": str(e)}
 
     def _write_skeletal_video(self, frames, output_path):
+        if not HAS_CV2:
+            raise RuntimeError("OpenCV (cv2) is not available. Skeletal video generation is disabled in this environment.")
         width, height = 640, 480
         # Use H.264 for compatibility
         fourcc = cv2.VideoWriter_fourcc(*'avc1')

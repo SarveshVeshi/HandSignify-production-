@@ -19,9 +19,13 @@ import os
 import random
 import re
 import pickle
-import cv2
-import mediapipe as mp
-from mediapipe.python import solutions as mp_solutions
+try:
+    import cv2
+    import mediapipe as mp
+    from mediapipe.python import solutions as mp_solutions
+    HAS_CAMERA_DEPS = True
+except ImportError:
+    HAS_CAMERA_DEPS = False
 import numpy as np
 from services.sign_service import sign_service
 
@@ -642,6 +646,8 @@ def generate_frames():
 
 @app.route('/video_feed')
 def video_feed():
+    if not HAS_CAMERA_DEPS:
+        return "Camera processing is not available in cloud deployment. Please use the client-side camera features.", 501
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # --------------------------- Prediction API ------------------
