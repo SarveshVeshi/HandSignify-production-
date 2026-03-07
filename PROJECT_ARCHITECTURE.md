@@ -58,12 +58,17 @@ This document provides a detailed overview of the architecture of the project, i
 
 ---
 
-## Model Inference Pipeline
-1. Input data (image/video) is processed using OpenCV.
-2. Mediapipe performs hand tracking and gesture recognition.
-3. Scikit-learn classifies the processed data.
+## Model Inference Pipeline (Cloud-Compatible)
+1. **Frontend**: The browser captures video via `navigator.mediaDevices.getUserMedia`.
+2. **Local Detection**: MediaPipe JS extracts 21 hand landmarks directly in the browser.
+3. **API Call**: Landmarks are sent to the `/api/predict` endpoint in `app.py`.
+4. **Backend Classification**: The Flask server uses the pre-trained Random Forest model (`model.p`) to classify the landmarks.
+5. **Real-Time Update**: The prediction is returned to the frontend and displayed instantly.
 
 ---
+
+## ☁️ Cloud Deployment (Vercel/Global)
+The architecture is now optimized for public cloud platforms. By offloading camera hardware access to the user's browser, the application no longer requires a physical webcam on the server, making it compatible with Vercel, Heroku, and other cloud providers.
 
 ## Frontend-Backend Interaction
 - Flask renders templates and serves static files.

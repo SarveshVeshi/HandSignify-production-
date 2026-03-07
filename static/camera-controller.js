@@ -1,127 +1,105 @@
 // camera-controller.js
-// Modularized camera controller for ASL Translator
-// Prevents duplicate event listeners and enables reuse across multiple pages
+// Modularized camera controller for ASL Translator - Cloud Compatible Version
+// Uses browser MediaDevices API for camera access
 
 class CameraController {
     constructor(config) {
         this.startButton = document.getElementById(config.startButtonId);
         this.stopButton = document.getElementById(config.stopButtonId);
-        this.feedElement = document.getElementById(config.feedElementId);
+        this.videoElement = document.getElementById(config.videoElementId);
         this.container = document.getElementById(config.containerId);
-        this.videoFeedUrl = config.videoFeedUrl;
-        this.onPrediction = config.onPrediction || null; // Optional callback for predictions
+        this.canvas = document.getElementById(config.canvasId);
+        this.overlayCanvas = document.getElementById(config.overlayCanvasId);
+        this.onPrediction = config.onPrediction || null;
         this.predictionLog = [];
         this.isInitialized = false;
+        this.stream = null;
 
         this.init();
     }
 
     init() {
-        // Guard against missing elements
-        if (!this.startButton || !this.stopButton || !this.feedElement || !this.container) {
-            console.warn('CameraController: Required elements not found. Check element IDs.');
+        if (!this.startButton || !this.stopButton || !this.videoElement || !this.container) {
+            console.warn('CameraController: Required elements not found.');
             return;
         }
 
-        // Guard against double initialization
-        if (this.isInitialized) {
-            console.warn('CameraController: Already initialized');
-            return;
-        }
+        if (this.isInitialized) return;
 
-        // Bind event listeners (arrow functions maintain 'this' context)
         this.startButton.addEventListener('click', () => this.startCamera());
         this.stopButton.addEventListener('click', () => this.stopCamera());
 
         this.isInitialized = true;
-        console.log('CameraController: Initialized successfully');
+        console.log('CameraController: Initialized with WebRTC');
     }
 
-    startCamera() {
-        if (!this.feedElement || !this.container) return;
+    async startCamera() {
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: "user"
+                }
+            });
 
-        // Show camera container
-        this.container.classList.remove('hidden');
-        this.container.style.display = 'flex';
+            this.videoElement.srcObject = this.stream;
+            this.container.style.display = 'flex';
+            this.container.classList.remove('hidden');
 
-        // Start video feed stream
-        this.feedElement.src = this.videoFeedUrl;
+            this.stopButton.style.display = 'inline-block';
+            this.stopButton.classList.remove('hidden');
+            this.startButton.style.display = 'none';
 
-        // Update button visibility
-        this.stopButton.classList.remove('hidden');
-        this.stopButton.style.display = 'inline-block';
-        this.startButton.style.display = 'none';
-
-        console.log('CameraController: Camera started');
+            console.log('CameraController: Browser camera stream started');
+        } catch (err) {
+            console.error("CameraController: Error accessing camera:", err);
+            alert("Could not access camera. Please ensure you have granted permissions.");
+        }
     }
 
     stopCamera() {
-        if (!this.feedElement || !this.container) return;
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
 
-        // Hide camera container
-        this.container.classList.add('hidden');
+        if (this.videoElement) {
+            this.videoElement.srcObject = null;
+        }
+
         this.container.style.display = 'none';
+        this.container.classList.add('hidden');
 
-        // Stop video stream by clearing src
-        this.feedElement.src = '';
-
-        // Update button visibility
-        this.stopButton.classList.add('hidden');
         this.stopButton.style.display = 'none';
+        this.stopButton.classList.add('hidden');
         this.startButton.style.display = 'inline-block';
 
-        console.log('CameraController: Camera stopped');
+        console.log('CameraController: Camera stream stopped');
     }
 
-    // Method to capture ML model predictions (for Sign → Voice feature)
+    // Utility to capture frame for hybrid processing if needed
+    captureFrame() {
+        if (!this.canvas || !this.videoElement) return null;
+        const context = this.canvas.getContext('2d');
+        this.canvas.width = this.videoElement.videoWidth;
+        this.canvas.height = this.videoElement.videoHeight;
+        context.drawImage(this.videoElement, 0, 0, this.canvas.width, this.canvas.height);
+        return this.canvas.toDataURL('image/jpeg');
+    }
+
     capturePrediction(text) {
         if (!text) return;
-
-        // Store in prediction log (keep last 10)
-        this.predictionLog.push({
-            text: text,
-            timestamp: new Date().toISOString()
-        });
-
-        if (this.predictionLog.length > 10) {
-            this.predictionLog.shift(); // Remove oldest
-        }
-
-        // Call custom callback if provided
-        if (this.onPrediction && typeof this.onPrediction === 'function') {
-            this.onPrediction(text);
-        }
-    }
-
-    // Get the most recent prediction
-    getLatestPrediction() {
-        if (this.predictionLog.length === 0) return null;
-        return this.predictionLog[this.predictionLog.length - 1].text;
-    }
-
-    // Get all predictions
-    getAllPredictions() {
-        return this.predictionLog;
-    }
-
-    // Clear prediction log
-    clearPredictions() {
-        this.predictionLog = [];
+        this.predictionLog.push({ text, timestamp: new Date().toISOString() });
+        if (this.predictionLog.length > 10) this.predictionLog.shift();
+        if (this.onPrediction) this.onPrediction(text);
     }
 }
 
-// Global initialization helper function
 function initCameraController(config) {
-    // Validate required config
-    if (!config.startButtonId || !config.stopButtonId || !config.feedElementId || !config.containerId) {
-        console.error('CameraController: Missing required configuration');
-        return null;
-    }
-
     return new CameraController(config);
 }
 
-// Export for module usage (if needed)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { CameraController, initCameraController };
 }

@@ -513,9 +513,21 @@ def handle_refine_text(data):
 # -----------------------------  end  ---------------------------
 
 # --------------------------- Machine Learning ------------------
+import os
+import pickle
+
+# Robust path handling for Vercel/Production
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'model.p')
+
 try:
-    model_dict = pickle.load(open('./models/model.p', 'rb'))
-    model = model_dict['model']
+    if os.path.exists(MODEL_PATH):
+        with open(MODEL_PATH, 'rb') as f:
+            model_dict = pickle.load(f)
+        model = model_dict['model']
+    else:
+        print(f"Model file not found at {MODEL_PATH}")
+        model = None
 except Exception as e:
     print("Error loading the model:", e)
     model = None
@@ -625,18 +637,53 @@ def generate_frames():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    # Only allow shutdown from localhost for security
-    if request.remote_addr != '127.0.0.1':
-        return jsonify({"success": False, "message": "Unauthorized"}), 403
+# --------------------------- Prediction API ------------------
+
+@app.route('/api/predict', methods=['POST'])
+def predict_landmarks():
+    """
+    API endpoint that accepts hand landmarks and returns a prediction.
+    Enables cloud deployment by offloading camera capture to the browser.
+    """
+    data = request.get_json()
+    if not data or 'landmarks' not in data:
+        return jsonify({"success": False, "error": "No landmarks provided"}), 400
     
-    import os
-    import signal
+    landmarks_raw = data['landmarks'] # Expected to be a list of 21 {x, y, z} dicts
     
-    # Graceful shutdown using a signal
-    os.kill(os.getpid(), signal.SIGINT)
-    return jsonify({"success": True, "message": "Server shutting down..."})
+    if model is None:
+        return jsonify({"success": False, "error": "Model not loaded on server"}), 500
+
+    try:
+        data_aux = []
+        x_ = []
+        y_ = []
+
+        # Extract x and y coordinates
+        for lm in landmarks_raw:
+            x_.append(lm['x'])
+            y_.append(lm['y'])
+
+        # Normalize landmarks relative to the minimum x and y (as required by the model)
+        for lm in landmarks_raw:
+            data_aux.append(lm['x'] - min(x_))
+            data_aux.append(lm['y'] - min(y_))
+
+        # Perform prediction
+        prediction = model.predict([np.asarray(data_aux)])
+        
+        labels_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J', 10: 'K', 11: 'L', 12: 'M',
+                   13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z', 26: 'Hello', 27: 'Done', 28: 'Thank You', 29: 'I Love you', 30: 'Sorry', 31: 'Please', 32: 'You are welcome.' }
+        
+        predicted_character = labels_dict[int(prediction[0])]
+        
+        return jsonify({
+            "success": True, 
+            "character": predicted_character
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # -----------------------------  end  ---------------------------
 
