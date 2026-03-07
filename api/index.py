@@ -60,6 +60,10 @@ db = SQLAlchemy(app)
 # -------------------Socket.IO Setup-------------------
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
+# -------------------Global Labels Mapping-------------------
+LABELS_DICT = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J', 10: 'K', 11: 'L', 12: 'M',
+               13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z', 26: 'Hello', 27: 'Done', 28: 'Thank You', 29: 'I Love you', 30: 'Sorry', 31: 'Please', 32: 'You are welcome.' }
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -528,19 +532,22 @@ import os
 import pickle
 
 # Robust path handling for Vercel/Production
+# File is now moved into api/models/
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, 'models', 'model.p')
 
 try:
     if os.path.exists(MODEL_PATH):
+        sys.stderr.write(f"DEBUG: Found model at {MODEL_PATH}\n")
         with open(MODEL_PATH, 'rb') as f:
             model_dict = pickle.load(f)
         model = model_dict['model']
+        sys.stderr.write("DEBUG: Model loaded successfully\n")
     else:
-        print(f"Model file not found at {MODEL_PATH}")
+        sys.stderr.write(f"ERROR: Model file not found at {MODEL_PATH}\n")
         model = None
 except Exception as e:
-    print("Error loading the model:", e)
+    sys.stderr.write(f"ERROR: Loading the model: {e}\n")
     model = None
 @app.route('/generate_frames', methods=['POST'])
 def generate_frames():
@@ -558,9 +565,6 @@ def generate_frames():
     hands = mp_hands.Hands(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
     
     last_emitted_char = None
-
-    labels_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J', 10: 'K', 11: 'L', 12: 'M',
-               13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z', 26: 'Hello', 27: 'Done', 28: 'Thank You', 29: 'I Love you', 30: 'Sorry', 31: 'Please', 32: 'You are welcome.' }
 
     try:
         while True:
@@ -617,7 +621,7 @@ def generate_frames():
 
                 try:
                     prediction = model.predict([np.asarray(data_aux)])
-                    predicted_character = labels_dict[int(prediction[0])]
+                    predicted_character = LABELS_DICT[int(prediction[0])]
                     
                     if predicted_character != last_emitted_char:
                         # Only emit on change to reduce traffic
@@ -685,10 +689,7 @@ def predict_landmarks():
         # Perform prediction
         prediction = model.predict([np.asarray(data_aux)])
         
-        labels_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J', 10: 'K', 11: 'L', 12: 'M',
-                   13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z', 26: 'Hello', 27: 'Done', 28: 'Thank You', 29: 'I Love you', 30: 'Sorry', 31: 'Please', 32: 'You are welcome.' }
-        
-        predicted_character = labels_dict[int(prediction[0])]
+        predicted_character = LABELS_DICT[int(prediction[0])]
         
         return jsonify({
             "success": True, 

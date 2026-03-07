@@ -96,11 +96,16 @@ class CloudPredictor {
             if (data.success && data.character) {
                 const char = data.character;
                 if (char !== this.lastPredictedChar) {
+                    console.log(`[CloudPredictor] New prediction: ${char}`);
                     this.handleNewPrediction(char);
                     this.lastPredictedChar = char;
                 }
+            } else if (!data.success) {
+                console.error(`[CloudPredictor] API Error: ${data.error}`);
             }
-        } catch (err) { }
+        } catch (err) {
+            console.error(`[CloudPredictor] Fetch Error:`, err);
+        }
     }
 
     drawOverlay() {
@@ -230,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('new-prediction', (e) => {
     const char = e.detail.character;
+    console.log(`[EventListener] Received new-prediction: ${char}`);
     if (typeof accumulatedText !== 'undefined') {
         accumulatedText += char + " ";
         const o1 = document.getElementById('predictionOutput');
@@ -237,5 +243,8 @@ window.addEventListener('new-prediction', (e) => {
         const o2 = document.getElementById('accumulatedTextVoice');
         if (o2) o2.innerText = accumulatedText;
         if (typeof isAutoSpeakEnabled !== 'undefined' && isAutoSpeakEnabled) speakText(char);
+    } else {
+        console.warn('[EventListener] accumulatedText is undefined. Initializing...');
+        window.accumulatedText = char + " ";
     }
 });
