@@ -131,6 +131,9 @@ function disconnectWebSocket() {
 function speakText(text, settings = {}) {
     if (!window.speechSynthesis || !text) return;
 
+    // Immediately stop any previously queued speech for instant synchronization
+    window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
 
     // Get live values from UI if IDs are standard, or use passed settings
@@ -143,6 +146,7 @@ function speakText(text, settings = {}) {
 
     window.speechSynthesis.speak(utterance);
 }
+
 
 /**
  * Stops any ongoing or queued speech.
