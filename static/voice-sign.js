@@ -19,9 +19,8 @@
         initializeElements();
         checkBrowserCompatibility();
 
-        if (SpeechRecognition) {
-            initVoiceRecognition();
-        }
+        // We no longer initialize recognition on load.
+        // It must be initialized on demand (button click) for mobile/iOS compatibility.
     });
 
     function initializeElements() {
@@ -75,6 +74,10 @@
                 generateSignsFromRefinedText();
             });
         }
+
+        // Voice Recognition Main Buttons (Moved from initVoiceRecognition)
+        if (startBtn) startBtn.addEventListener('click', startListening);
+        if (stopBtn) stopBtn.addEventListener('click', stopListening);
     }
 
 
@@ -105,16 +108,18 @@
     }
 
     function initVoiceRecognition() {
-        recognition = new SpeechRecognition();
+        if (!SpeechRecognition) return null;
 
-        // Configuration
-        recognition.lang = 'en-US';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+        const rec = new SpeechRecognition();
+
+        // Configuration (optimized for mobile compatibility)
+        rec.lang = 'en-US';
+        rec.continuous = false; // Mobile often breaks on continuous
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
 
         // Event Handlers
-        recognition.onstart = function () {
+        rec.onstart = function () {
             isListening = true;
             microphoneButton.classList.add('mic-active');
             if (listeningIndicator) {
@@ -126,40 +131,48 @@
             if (voiceErrorMessage) voiceErrorMessage.style.display = 'none';
         };
 
-        recognition.onresult = function (event) {
+        rec.onresult = function (event) {
             const transcript = event.results[0][0].transcript;
             handleTranscript(transcript);
         };
 
-        recognition.onerror = function (event) {
+        rec.onerror = function (event) {
             handleError(event.error);
         };
 
-        recognition.onend = function () {
+        rec.onend = function () {
             stopListening();
         };
 
-        // Button event listeners
-        startBtn.addEventListener('click', startListening);
-        stopBtn.addEventListener('click', stopListening);
+        return rec;
     }
 
     function startListening() {
-        if (!recognition) {
-            showError('Speech recognition is not available.');
+        if (!SpeechRecognition) {
+            showError('Speech recognition is not available in this browser.');
             return;
         }
 
         try {
+            // Re-initialize for every click to satisfy strict mobile browser requirements
+            if (recognition) {
+                recognition.onend = null; // Prevent callback loops
+                recognition.abort();
+            }
+            recognition = initVoiceRecognition();
+
             // Clear previous results
-            voiceSignOutput.innerHTML = '';
-            voiceSignOutput.style.display = 'none';
-            transcriptSection.style.display = 'none';
-            voiceErrorMessage.style.display = 'none';
+            if (voiceSignOutput) {
+                voiceSignOutput.innerHTML = '';
+                voiceSignOutput.style.display = 'none';
+            }
+            if (transcriptSection) transcriptSection.style.display = 'none';
+            if (voiceErrorMessage) voiceErrorMessage.style.display = 'none';
 
             recognition.start();
         } catch (error) {
-            showError('Could not start speech recognition. Please try again.');
+            console.error(error);
+            showError('Could not start speech recognition. Ensure microphone permissions are granted.');
         }
     }
 
