@@ -1,15 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="primary-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b6fef" />
+    <!-- Vibrant Indigo to Blue Gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b6ae2" />
       <stop offset="100%" stop-color="#6366f1" />
     </linearGradient>
+    <!-- Glass Reflection matching the navbar ::after pseudo element -->
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
   </defs>
-  <!-- Background matches hs-logo-icon-bg -->
-  <rect width="64" height="64" rx="20" fill="url(#primary-gradient)"/>
+
+  <!-- Base filled box -->
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
   
-  <!-- Hand icon matches lucide-hand -->
-  <g stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(13, 13) scale(1.6)">
+  <!-- Overlay gloss/glass layer -->
+  <rect width="64" height="64" rx="16" fill="url(#glass)"/>
+  
+  <!-- Centered Hand Icon (perfectly aligned visually) -->
+  <g stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(13.6, 13.6) scale(1.53)">
     <path d="M18 11V6a2 2 0 0 0-4 0v4"/>
     <path d="M14 10V4a2 2 0 0 0-4 0v6"/>
     <path d="M10 10.5V3a2 2 0 0 0-4 0v9"/>
