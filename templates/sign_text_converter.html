@@ -666,6 +666,11 @@
                     panel.classList.remove('active');
                 });
                 document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+                
+                // Clear state when switching tabs to ensure independent sessions
+                if (typeof clearAccumulatedText === 'function') {
+                    clearAccumulatedText();
+                }
             });
         });
 
