@@ -8,7 +8,7 @@ class CloudPredictor {
     constructor(config) {
         this.videoElement = document.getElementById(config.videoElementId);
         this.overlayCanvas = document.getElementById(config.overlayCanvasId);
-        this.predictionEndpoint = '/api/predict';
+        this.predictionEndpoint = 'https://handsignify-api.onrender.com/api/predict';
 
         // --- Tuning Parameters (Matching Original Stability) ---
         this.predictionInterval = 80; // High frequency for responsiveness
